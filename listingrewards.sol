@@ -248,6 +248,24 @@ contract ListingRewards {
         RequestEvent(RequestEventTypes.Verdict, idx, (decision)? 1 : 0);
     }
 
+    function requestlisteePayment(uint idx) {
+        // NOTE: Check if the sender exists as a veto
+        if (idx <= 0) revert();
+        if (requests[idx].veto.numberOfVetos <= 0) {
+            if (!msg.sender.send(depositAmount + rewardAmount)
+                revert();
+            delete requests[idx];
+            listees[msg.sender].requestIdx = 0;
+        } else {
+            if(requests[idx].appeal == true) {
+                if(requests[idx].verdictWinner != verdictTypes.Listee) revert();
+                    // Send d + r + a, where a is 10% of d
+                    if (!msg.sender.send(depositAmount + rewardAmount + (depositAmount * 101) / 100))
+                            revert();
+            }
+        }        
+    }
+
     function requestVetoPayment(uint idx) {
         // NOTE: Check if the sender exists as a veto
         if (idx <= 0) revert();
@@ -261,6 +279,7 @@ contract ListingRewards {
         
         if (requests[idx].veto.numberOfWithdrawn == requests[idx].veto.numberOfVetos) {
             delete requests[idx];
+            listees[msg.sender].requestIdx = 0;
         } else {
             // NOTE: Avoid reentrancy 
             requests[idx].veto.vetos[msg.sender] = false;
