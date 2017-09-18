@@ -45,11 +45,20 @@ contract ListingRewards {
 
     uint public rewardAmount;
     uint public depositAmount;
+    uint public appealAmount;
+
+    enum verdictTypes {NoResult, Listee, Vetos}
 
     struct listeeStruct {
         uint lastBlockClaimed;
         uint requestIdx;
         uint balance;
+    }
+
+    struct vetosStruct {
+        mapping (address => bool) vetos; // Bool value will check if the user is eligible to withdraw
+        uint numberOfVetos;
+        uint numberOfWithdrawn;
     }
 
     struct listingRewardRequestsStruct {
@@ -61,7 +70,8 @@ contract ListingRewards {
         uint dateCreated;
         uint deposit;
         bool appeal;
-        address[] vetos;
+        verdictTypes verdictWinner;  // Will be used to indicate the winner of the verdict `1` for listee and `2` for vetos
+        vetosStruct veto;
     }
     
     //CTOR
@@ -136,6 +146,7 @@ contract ListingRewards {
         requests[idx].amount = amount;
         requests[idx].dateCreated = now;
         requests[idx].deposit = depositAmount;
+        requests[idx].verdictWinner = verdictTypes.NoResult;
 
         listees[msg.sender].requestIdx = idx;
 
@@ -147,7 +158,7 @@ contract ListingRewards {
 
         if (idx == 0) revert();
         // no cancel if people have vetod
-        if (requests[idx].vetos.length > 0) revert();
+        if (requests[idx].veto.numberOfVetos > 0) revert();
 
         //send listee their deposit back
         if (!requests[idx].listeeAddress.send(requests[idx].deposit))
@@ -175,7 +186,7 @@ contract ListingRewards {
             revert();
 
         // if there are vetos and no appeal then no withdraw
-        if (requests[idx].vetos.length > 0 && requests[idx].appeal == false)
+        if (requests[idx].veto.numberOfVetos > 0 && requests[idx].appeal == false)
             revert();
 
         listingRewardRequestsStruct req = requests[listees[msg.sender].requestIdx];
@@ -191,7 +202,9 @@ contract ListingRewards {
         if (msg.value > (depositAmount * 101) / 100) {
             if (!msg.sender.send(msg.value - ((depositAmount * 101) / 100)))
                 revert();
-            requests[idx].vetos.push(msg.sender);
+            // requests[idx].vetos.push(msg.sender);
+            requests[idx].veto.vetos[msg.sender] = true;
+            requests[idx].veto.numberOfVetos += 1;
         }
         else
             revert();
@@ -204,6 +217,15 @@ contract ListingRewards {
         if (msg.sender != requests[idx].listeeAddress)
             revert();
 
+        // take 10% of deposit amount
+        if (msg.value > (depositAmount * 101) / 100) {
+            appealAmount = (depositAmount * 101) / 100;
+            if (!msg.sender.send(msg.value - appealAmount))
+                revert();
+        }
+        else
+            revert();
+
         requests[idx].appeal = true;
 
         RequestEvent(RequestEventTypes.Appeal, idx, 0);
@@ -212,15 +234,38 @@ contract ListingRewards {
     function verdict(uint idx, bool decision) {
         if (msg.sender != creator)
             revert();
+        if (idx <= 0) revert();
+
+        // NOTE:- Check if the id exist in the array
 
         if (decision) {
-            //proceed with reward request
-        }
+            requests[idx].verdictWinner = verdictTypes.Listee;
+          }
         else {
-            //reward vetoers
-        }
+            requests[idx].verdictWinner = verdictTypes.Vetos;
+         }
 
         RequestEvent(RequestEventTypes.Verdict, idx, (decision)? 1 : 0);
+    }
+
+    function requestVetoPayment(uint idx) {
+        // NOTE: Check if the sender exists as a veto
+        if (idx <= 0) revert();
+        if(requests[idx].appeal == true) {
+            if(requests[idx].verdictWinner != verdictTypes.Vetos) revert();
+            if(requests[idx].veto.vetos[msg.sender] != true) revert();
+        }
+
+        if (!msg.sender.send(((depositAmount + rewardAmount)/requests[idx].veto.numberOfVetos) + (depositAmount * 101) / 100))
+                revert();
+        
+        if (requests[idx].veto.numberOfWithdrawn == requests[idx].veto.numberOfVetos) {
+            delete requests[idx];
+        } else {
+            // NOTE: Avoid reentrancy 
+            requests[idx].veto.vetos[msg.sender] = false;
+            requests[idx].veto.numberOfWithdrawn += 1;
+        }
     }
 
     function returnEth(address _to) {
