@@ -59,6 +59,7 @@ contract ListingRewards {
 
     struct vetosStruct {
         mapping (address => bool) vetos; // Bool value will check if the user is eligible to withdraw
+        uint dateCreated;
         uint numberOfVetos;
         uint numberOfWithdrawn;
     }
@@ -73,7 +74,7 @@ contract ListingRewards {
         uint deposit;
         bool appeal;
         verdictTypes verdictWinner;  // Will be used to indicate the winner of the verdict `1` for listee and `2` for vetos
-        vetosStruct veto;
+        vetosStruct vetos;
     }
     
     //CTOR
@@ -158,7 +159,7 @@ contract ListingRewards {
 
         if (idx == 0) revert();
         // no cancel if people have vetod
-        if (requests[idx].veto.numberOfVetos > 0) revert();
+        if (requests[idx].vetos.numberOfVetos > 0) revert();
 
         //send listee their deposit back
         if (!requests[idx].listeeAddress.send(requests[idx].deposit))
@@ -186,7 +187,7 @@ contract ListingRewards {
             revert();
 
         // if there are vetos and no appeal then no withdraw
-        if (requests[idx].veto.numberOfVetos > 0 && requests[idx].appeal == false)
+        if (requests[idx].vetos.numberOfVetos > 0 && requests[idx].appeal == false)
             revert();
 
         listingRewardRequestsStruct req = requests[listees[msg.sender].requestIdx];
@@ -198,14 +199,19 @@ contract ListingRewards {
     }
 
     function vetoRequest(uint idx) payable {
+        // NOTE:- Avoid self veto
+        if (msg.sender == requests[idx].listeeAddress) revert();
         // take 10% of deposit amount
         if (msg.value > (depositAmount * 101) / 100) {
             if (!msg.sender.send(msg.value - ((depositAmount * 101) / 100)))
                 revert();
             // requests[idx].vetos.push(msg.sender);
-            requests[idx].veto.vetos[msg.sender] = true;
+            requests[idx].vetos.vetos[msg.sender] = true;
             vetosToRequestMapping[msg.sender].push(idx);
-            requests[idx].veto.numberOfVetos += 1;
+            if (requests[idx].vetos.numberOfVetos == 0) {
+                requests[idx].vetos.dateCreated = now;
+            }
+            requests[idx].vetos.numberOfVetos += 1;
         }
         else
             revert();
@@ -232,14 +238,13 @@ contract ListingRewards {
         RequestEvent(RequestEventTypes.Appeal, idx, 0);
     }
 
-    function verdict(uint idx, bool decision) {
-        if (msg.sender != creator)
-            revert();
+    function verdict(uint idx, bool inFavorOfListee) {
+        if (msg.sender != creator) revert();
         if (idx <= 0) revert();
 
         // NOTE:- Check if the id exist in the array
 
-        if (decision) {
+        if (inFavorOfListee) {
             requests[idx].verdictWinner = verdictTypes.Listee;
           }
         else {
@@ -249,12 +254,15 @@ contract ListingRewards {
         RequestEvent(RequestEventTypes.Verdict, idx, (decision)? 1 : 0);
     }
 
-    function requestlisteePayment(uint idx) {
+    function listeePayout(uint idx) {
         // NOTE:- Check if the idx exists
+        // NOTE:- Condition for 28 days
+        if (now - requests[idx].dateCreated > (1 * 28 days))
+            revert();
         if (listees[msg.sender].requestIdx != idx) revert();
         // if (idx <= 0) revert();
         // NOTE: Check if the vetos exist for the listee
-        if (requests[idx].veto.numberOfVetos == 0) {
+        if (requests[idx].vetos.numberOfVetos == 0) {
             delete requests[idx];
             listees[msg.sender].requestIdx = 0;    
             if (!msg.sender.send(depositAmount + rewardAmount))
@@ -273,29 +281,31 @@ contract ListingRewards {
         }    
     }
 
-    function getVetoRequest() returns (uint[]) {
+    function getVetoRequests() returns (uint[]) {
         return vetosToRequestMapping[msg.sender];
     }
 
-    function requestVetoPayment(uint idx) {
+    function vetoPayout(uint idx) {
         if (idx <= 0) revert();
+        if (now - requests[idx].vetos.dateCreated < (1 * 7 days))
+            revert();
         if(requests[idx].appeal == true) {
             if(requests[idx].verdictWinner != verdictTypes.Vetos) revert();
             // NOTE: Check if the sender exists as a veto and is authorized to be paid
-            if(requests[idx].veto.vetos[msg.sender] != true) revert();
+            if(requests[idx].vetos.vetos[msg.sender] != true) revert();
         }
 
         // Avoid reentrancy 
-        uint amount = ((depositAmount + rewardAmount)/requests[idx].veto.numberOfVetos) + ((depositAmount * 101) / 100);
-        requests[idx].veto.vetos[msg.sender] = false;
+        uint amount = ((depositAmount + rewardAmount)/requests[idx].vetos.numberOfVetos) + ((depositAmount * 101) / 100);
+        requests[idx].vetos.vetos[msg.sender] = false;
         if (!msg.sender.send(amount)) revert();
         RequestEvent(RequestEventTypes.Payout, idx, amount);
         
-        if (requests[idx].veto.numberOfWithdrawn == requests[idx].veto.numberOfVetos) {
+        if (requests[idx].vetos.numberOfWithdrawn == requests[idx].vetos.numberOfVetos) {
             delete requests[idx];
             listees[msg.sender].requestIdx = 0;
         } else {
-            requests[idx].veto.numberOfWithdrawn += 1;
+            requests[idx].vetos.numberOfWithdrawn += 1;
         }
     }
 
