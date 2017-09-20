@@ -41,7 +41,7 @@ contract ListingRewards {
     listingRewardRequestsStruct[] requests;
     uint[] emptySlots;
 
-    mapping (address => listeeStruct) public listees;
+    mapping (address => listeeStruct) listees;
 
     mapping (address => uint[]) vetosToRequestMapping;
 
@@ -87,15 +87,15 @@ contract ListingRewards {
     }
 
     //Add Listee
-    function addListee(uint idx) returns (uint, address) {
+    function addListee(uint idx) returns (uint) {
         listees[msg.sender].lastBlockClaimed = 0;
         listees[msg.sender].requestIdx = idx;
         listees[msg.sender].balance = 4;
-        return (listees[msg.sender].requestIdx, msg.sender);
+        return listees[msg.sender].requestIdx;
     }
 
-    function getBal() returns (uint, address) {
-        return (listees[msg.sender].requestIdx, msg.sender);
+    function getRequestID() returns (uint) {
+        return listees[msg.sender].requestIdx;
     }
 
 
