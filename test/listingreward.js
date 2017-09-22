@@ -1,5 +1,6 @@
 var ListingRewards = artifacts.require("./ListingRewards.sol");
 const assertJump = require("./helpers/assertJump");
+const log = require("./helpers/logger");
 
 contract("ListingRewards", accounts => {
 	let listing;
@@ -14,20 +15,10 @@ contract("ListingRewards", accounts => {
 
 	it("Adding listees", async () => {
 		await listing.addListee(12, { from: listee1 }).then(tx => {
-			console.log(
-				"\x1b[35m%s\x1b[0m",
-				"Adding listee",
-				tx.receipt.gasUsed,
-				"gas"
-			);
+			log(`Adding listee ${tx.receipt.gasUsed} gas`);
 		});
 		await listing.addListee(0, { from: listee2 }).then(tx => {
-			console.log(
-				"\x1b[35m%s\x1b[0m",
-				"Adding listee",
-				tx.receipt.gasUsed,
-				"gas"
-			);
+			log(`Adding listee ${tx.receipt.gasUsed} gas`);
 		});
 		const listee1Result = await listing.getRequestID.call({
 			from: listee1
@@ -46,12 +37,7 @@ contract("ListingRewards", accounts => {
 			await listing
 				.newRewardRequest(1, { from: listee1, value: 1 })
 				.then(tx => {
-					console.log(
-						"\x1b[35m%s\x1b[0m",
-						"Adding new reward request",
-						tx.receipt.gasUsed,
-						"gas"
-					);
+					log(`Adding new reward request ${tx.receipt.gasUsed} gas`);
 				});
 			const listee1Result = await listing.getRequestID.call({
 				from: listee1
@@ -66,12 +52,7 @@ contract("ListingRewards", accounts => {
 		await listing
 			.newRewardRequest(1, { from: listee1, value: 3 })
 			.then(tx => {
-				console.log(
-					"\x1b[35m%s\x1b[0m",
-					"Adding new reward request",
-					tx.receipt.gasUsed,
-					"gas"
-				);
+				log(`Adding new reward request ${tx.receipt.gasUsed} gas`);
 			});
 		const listee1Result = await listing.getRequestID.call({
 			from: listee1
@@ -82,12 +63,7 @@ contract("ListingRewards", accounts => {
 		await listing
 			.newRewardRequest(1, { from: listee1, value: 2 })
 			.then(tx => {
-				console.log(
-					"\x1b[35m%s\x1b[0m",
-					"Adding new reward request",
-					tx.receipt.gasUsed,
-					"gas"
-				);
+				log(`Adding new reward request ${tx.receipt.gasUsed} gas`);
 			});
 		const listee1Result = await listing.getRequestID.call({
 			from: listee1
@@ -99,22 +75,12 @@ contract("ListingRewards", accounts => {
 			await listing
 				.newRewardRequest(1, { from: listee1, value: 2 })
 				.then(tx => {
-					console.log(
-						"\x1b[35m%s\x1b[0m",
-						"Adding new reward request",
-						tx.receipt.gasUsed,
-						"gas"
-					);
+					log(`Adding new reward request ${tx.receipt.gasUsed} gas`);
 				});
 			await listing
 				.newRewardRequest(2, { from: listee1, value: 2 })
 				.then(tx => {
-					console.log(
-						"\x1b[35m%s\x1b[0m",
-						"Adding new reward request",
-						tx.receipt.gasUsed,
-						"gas"
-					);
+					log(`Adding new reward request ${tx.receipt.gasUsed} gas`);
 				});
 			assert.fail("should have thrown before");
 		} catch (error) {
@@ -128,31 +94,16 @@ contract("ListingRewards", accounts => {
 		await listing
 			.newRewardRequest(1, { from: listee1, value: 2 })
 			.then(tx => {
-				console.log(
-					"\x1b[35m%s\x1b[0m",
-					"Adding new reward request",
-					tx.receipt.gasUsed,
-					"gas"
-				);
+				log(`Adding new reward request ${tx.receipt.gasUsed} gas`);
 			});
 		await listing.cancelRewardRequest({ from: listee1 }).then(tx => {
-			console.log(
-				"\x1b[35m%s\x1b[0m",
-				"Cancel new reward request",
-				tx.receipt.gasUsed,
-				"gas"
-			);
+			log(`Cancel new reward request ${tx.receipt.gasUsed} gas`);
 		});
 	});
 	it("Listee trying to cancel reward request without request", async () => {
 		try {
 			await listing.cancelRewardRequest({ from: listee1 }).then(tx => {
-				console.log(
-					"\x1b[35m%s\x1b[0m",
-					"Cancel new reward request",
-					tx.receipt.gasUsed,
-					"gas"
-				);
+				log(`Cancel new reward request ${tx.receipt.gasUsed} gas`);
 			});
 			assert.fail("should have thrown before");
 		} catch (error) {
@@ -164,24 +115,14 @@ contract("ListingRewards", accounts => {
 			await listing
 				.newRewardRequest(1, { from: listee1, value: 2 })
 				.then(tx => {
-					console.log(
-						"\x1b[35m%s\x1b[0m",
-						"Adding new reward request",
-						tx.receipt.gasUsed,
-						"gas"
-					);
+					log(`Adding new reward request ${tx.receipt.gasUsed} gas`);
 				});
 			await listing.vetoRequest(1).then(tx => {
-				console.log(tx.receipt.gasUsed, "gas");
+				log(`Veto request ${tx.receipt.gasUsed} gas`);
 			});
 
 			await listing.cancelRewardRequest({ from: listee1 }).then(tx => {
-				console.log(
-					"\x1b[35m%s\x1b[0m",
-					"Cancel new reward request",
-					tx.receipt.gasUsed,
-					"gas"
-				);
+				log(`Cancel new reward request ${tx.receipt.gasUsed} gas`);
 			});
 			assert.fail("should have thrown before");
 		} catch (error) {
@@ -193,29 +134,14 @@ contract("ListingRewards", accounts => {
 			await listing
 				.newRewardRequest(1, { from: listee1, value: 2 })
 				.then(tx => {
-					console.log(
-						"\x1b[35m%s\x1b[0m",
-						"Adding new reward request",
-						tx.receipt.gasUsed,
-						"gas"
-					);
+					log(`Adding new reward request ${tx.receipt.gasUsed} gas`);
 				});
 
 			await listing.cancelRewardRequest({ from: listee1 }).then(tx => {
-				console.log(
-					"\x1b[35m%s\x1b[0m",
-					"Cancel new reward request",
-					tx.receipt.gasUsed,
-					"gas"
-				);
+				log(`Cancel new reward request ${tx.receipt.gasUsed} gas`);
 			});
 			await listing.vetoRequest(1, { from: veto, value: 1 }).then(tx => {
-				console.log(
-					"\x1b[35m%s\x1b[0m",
-					"Veto request",
-					tx.receipt.gasUsed,
-					"gas"
-				);
+				log(`Veto request ${tx.receipt.gasUsed} gas`);
 			});
 			assert.fail("should have thrown before");
 		} catch (error) {
@@ -230,15 +156,10 @@ contract("ListingRewards", accounts => {
 			await listing
 				.newRewardRequest(1, { from: listee1, value: 1 })
 				.then(tx => {
-					console.log(
-						"\x1b[35m%s\x1b[0m",
-						"Adding new reward request",
-						tx.receipt.gasUsed,
-						"gas"
-					);
+					log(`Adding new reward request ${tx.receipt.gasUsed} gas`);
 				});
 			await listing.vetoRequest(1, { from: veto, value: 0 }).then(tx => {
-				console.log(tx.receipt.gasUsed, "gas");
+				log(`Veto Request ${tx.receipt.gasUsed} gas`);
 			});
 			assert.fail("should have thrown before");
 		} catch (error) {
@@ -249,20 +170,10 @@ contract("ListingRewards", accounts => {
 		await listing
 			.newRewardRequest(1, { from: listee1, value: 2 })
 			.then(tx => {
-				console.log(
-					"\x1b[35m%s\x1b[0m",
-					"Adding new reward request",
-					tx.receipt.gasUsed,
-					"gas"
-				);
+				log(`Adding new reward request ${tx.receipt.gasUsed} gas`);
 			});
 		await listing.vetoRequest(1, { from: veto, value: 1 }).then(tx => {
-			console.log(
-				"\x1b[35m%s\x1b[0m",
-				"Veto request",
-				tx.receipt.gasUsed,
-				"gas"
-			);
+			log(`Veto request ${tx.receipt.gasUsed} gas`);
 		});
 	});
 	it("Creating a new Veto request by the listee itself", async () => {
@@ -270,18 +181,37 @@ contract("ListingRewards", accounts => {
 			await listing
 				.newRewardRequest(1, { from: listee1, value: 2 })
 				.then(tx => {
-					console.log(
-						"\x1b[35m%s\x1b[0m",
-						"Adding new reward request",
-						tx.receipt.gasUsed,
-						"gas"
-					);
+					log(`Adding new reward request ${tx.receipt.gasUsed} gas`);
 				});
 			await listing
 				.vetoRequest(1, { from: listee1, value: 1 })
 				.then(tx => {
-					console.log(tx.receipt.gasUsed, "gas");
+					log(`Veto request ${tx.receipt.gasUsed} gas`);
 				});
+			assert.fail("should have thrown before");
+		} catch (error) {
+			assertJump(error);
+		}
+	});
+	it("Creating a new Veto request after 28 days", async () => {
+		try {
+			await listing
+				.newRewardRequest(1, { from: listee1, value: 2 })
+				.then(tx => {
+					log(`Adding new reward request ${tx.receipt.gasUsed} gas`);
+				});
+			await web3.currentProvider.sendAsync(
+				{
+					jsonrpc: "2.0",
+					method: "evm_increaseTime",
+					params: [86400 * 29], // 86400 seconds in a day
+					id: new Date().getTime()
+				},
+				() => {}
+			);
+			await listing.vetoRequest(1, { from: veto, value: 1 }).then(tx => {
+				log(`Veto request ${tx.receipt.gasUsed} gas`);
+			});
 			assert.fail("should have thrown before");
 		} catch (error) {
 			assertJump(error);
@@ -290,12 +220,7 @@ contract("ListingRewards", accounts => {
 	it("Creating a new Veto request without the listing", async () => {
 		try {
 			await listing.vetoRequest(1, { from: veto, value: 1 }).then(tx => {
-				console.log(
-					"\x1b[35m%s\x1b[0m",
-					"Veto request",
-					tx.receipt.gasUsed,
-					"gas"
-				);
+				log(`Veto request ${tx.receipt.gasUsed} gas`);
 			});
 			assert.fail("should have thrown before");
 		} catch (error) {
@@ -307,28 +232,13 @@ contract("ListingRewards", accounts => {
 			await listing
 				.newRewardRequest(1, { from: listee1, value: 2 })
 				.then(tx => {
-					console.log(
-						"\x1b[35m%s\x1b[0m",
-						"Adding new reward request",
-						tx.receipt.gasUsed,
-						"gas"
-					);
+					log(`Adding new reward request ${tx.receipt.gasUsed} gas`);
 				});
 			await listing.vetoRequest(1, { from: veto, value: 1 }).then(tx => {
-				console.log(
-					"\x1b[35m%s\x1b[0m",
-					"Veto request",
-					tx.receipt.gasUsed,
-					"gas"
-				);
+				log(`Veto request ${tx.receipt.gasUsed} gas`);
 			});
 			await listing.vetoRequest(1, { from: veto, value: 1 }).then(tx => {
-				console.log(
-					"\x1b[35m%s\x1b[0m",
-					"Veto request",
-					tx.receipt.gasUsed,
-					"gas"
-				);
+				log(`Veto request ${tx.receipt.gasUsed} gas`);
 			});
 			assert.fail("should have thrown before");
 		} catch (error) {
@@ -343,28 +253,13 @@ contract("ListingRewards", accounts => {
 			await listing
 				.newRewardRequest(1, { from: listee1, value: 1 })
 				.then(tx => {
-					console.log(
-						"\x1b[35m%s\x1b[0m",
-						"Adding new reward request",
-						tx.receipt.gasUsed,
-						"gas"
-					);
+					log(`Adding new reward request ${tx.receipt.gasUsed} gas`);
 				});
 			await listing.vetoRequest(1, { from: veto, value: 1 }).then(tx => {
-				console.log(
-					"\x1b[35m%s\x1b[0m",
-					"Veto request",
-					tx.receipt.gasUsed,
-					"gas"
-				);
+				log(`Veto request ${tx.receipt.gasUsed} gas`);
 			});
 			await listing.appeal(1, { from: listee1, value: 0 }).then(tx => {
-				console.log(
-					"\x1b[35m%s\x1b[0m",
-					"Appeal request",
-					tx.receipt.gasUsed,
-					"gas"
-				);
+				log(`Appeal request ${tx.receipt.gasUsed} gas`);
 			});
 			assert.fail("should have thrown before");
 		} catch (error) {
@@ -375,28 +270,13 @@ contract("ListingRewards", accounts => {
 		await listing
 			.newRewardRequest(1, { from: listee1, value: 2 })
 			.then(tx => {
-				console.log(
-					"\x1b[35m%s\x1b[0m",
-					"Adding new reward request",
-					tx.receipt.gasUsed,
-					"gas"
-				);
+				log(`Adding new reward request  ${tx.receipt.gasUsed} gas`);
 			});
 		await listing.vetoRequest(1, { from: veto, value: 1 }).then(tx => {
-			console.log(
-				"\x1b[35m%s\x1b[0m",
-				"Veto request",
-				tx.receipt.gasUsed,
-				"gas"
-			);
+			log(`Veto request ${tx.receipt.gasUsed} gas`);
 		});
 		await listing.appeal(1, { from: listee1, value: 1 }).then(tx => {
-			console.log(
-				"\x1b[35m%s\x1b[0m",
-				"Appeal request",
-				tx.receipt.gasUsed,
-				"gas"
-			);
+			log(`Appeal request  ${tx.receipt.gasUsed} gas`);
 		});
 	});
 	it("Someone else creating a new Appeal request for a listee ", async () => {
@@ -404,28 +284,40 @@ contract("ListingRewards", accounts => {
 			await listing
 				.newRewardRequest(1, { from: listee1, value: 2 })
 				.then(tx => {
-					console.log(
-						"\x1b[35m%s\x1b[0m",
-						"Adding new reward request",
-						tx.receipt.gasUsed,
-						"gas"
-					);
+					log(`Adding new reward request ${tx.receipt.gasUsed} gas`);
 				});
 			await listing.vetoRequest(1, { from: veto, value: 1 }).then(tx => {
-				console.log(
-					"\x1b[35m%s\x1b[0m",
-					"Veto request",
-					tx.receipt.gasUsed,
-					"gas"
-				);
+				log(`Veto request ${tx.receipt.gasUsed} gas`);
 			});
 			await listing.appeal(1, { from: listee2, value: 1 }).then(tx => {
-				console.log(
-					"\x1b[35m%s\x1b[0m",
-					"Appeal request",
-					tx.receipt.gasUsed,
-					"gas"
-				);
+				log(`Appeal request ${tx.receipt.gasUsed} gas`);
+			});
+			assert.fail("should have thrown before");
+		} catch (error) {
+			assertJump(error);
+		}
+	});
+	it("Listee creating a new Appeal request after 7 days ", async () => {
+		try {
+			await listing
+				.newRewardRequest(1, { from: listee1, value: 2 })
+				.then(tx => {
+					log(`Adding new reward request ${tx.receipt.gasUsed} gas`);
+				});
+			await listing.vetoRequest(1, { from: veto, value: 1 }).then(tx => {
+				log(`Veto request ${tx.receipt.gasUsed} gas`);
+			});
+			await web3.currentProvider.sendAsync(
+				{
+					jsonrpc: "2.0",
+					method: "evm_increaseTime",
+					params: [86400 * 8], // 86400 seconds in a day
+					id: new Date().getTime()
+				},
+				() => {}
+			);
+			await listing.appeal(1, { from: listee1, value: 1 }).then(tx => {
+				log(`Appeal request ${tx.receipt.gasUsed} gas`);
 			});
 			assert.fail("should have thrown before");
 		} catch (error) {
@@ -437,20 +329,10 @@ contract("ListingRewards", accounts => {
 			await listing
 				.newRewardRequest(1, { from: listee1, value: 2 })
 				.then(tx => {
-					console.log(
-						"\x1b[35m%s\x1b[0m",
-						"Adding new reward request",
-						tx.receipt.gasUsed,
-						"gas"
-					);
+					log(`Adding new reward request ${tx.receipt.gasUsed} gas`);
 				});
 			await listing.appeal(1, { from: listee1, value: 1 }).then(tx => {
-				console.log(
-					"\x1b[35m%s\x1b[0m",
-					"Appeal request",
-					tx.receipt.gasUsed,
-					"gas"
-				);
+				log(`Appeal request ${tx.receipt.gasUsed} gas`);
 			});
 			assert.fail("should have thrown before");
 		} catch (error) {
@@ -464,36 +346,16 @@ contract("ListingRewards", accounts => {
 		await listing
 			.newRewardRequest(1, { from: listee1, value: 2 })
 			.then(tx => {
-				console.log(
-					"\x1b[35m%s\x1b[0m",
-					"Adding new reward request",
-					tx.receipt.gasUsed,
-					"gas"
-				);
+				log(`Adding new reward request ${tx.receipt.gasUsed} gas`);
 			});
 		await listing.vetoRequest(1, { from: veto, value: 1 }).then(tx => {
-			console.log(
-				"\x1b[35m%s\x1b[0m",
-				"Veto request",
-				tx.receipt.gasUsed,
-				"gas"
-			);
+			log(`Veto request ${tx.receipt.gasUsed} gas`);
 		});
 		await listing.appeal(1, { from: listee1, value: 1 }).then(tx => {
-			console.log(
-				"\x1b[35m%s\x1b[0m",
-				"Appeal request",
-				tx.receipt.gasUsed,
-				"gas"
-			);
+			log(`Appeal request ${tx.receipt.gasUsed} gas`);
 		});
 		await listing.verdict(1, true, { from: owner }).then(tx => {
-			console.log(
-				"\x1b[35m%s\x1b[0m",
-				"Verdict request",
-				tx.receipt.gasUsed,
-				"gas"
-			);
+			log(`Verdict request ${tx.receipt.gasUsed} gas`);
 		});
 	});
 	it("Random user trying to decide the result", async () => {
@@ -501,36 +363,16 @@ contract("ListingRewards", accounts => {
 			await listing
 				.newRewardRequest(1, { from: listee1, value: 2 })
 				.then(tx => {
-					console.log(
-						"\x1b[35m%s\x1b[0m",
-						"Adding new reward request",
-						tx.receipt.gasUsed,
-						"gas"
-					);
+					log(`Adding new reward request ${tx.receipt.gasUsed} gas`);
 				});
 			await listing.vetoRequest(1, { from: veto, value: 1 }).then(tx => {
-				console.log(
-					"\x1b[35m%s\x1b[0m",
-					"Veto request",
-					tx.receipt.gasUsed,
-					"gas"
-				);
+				log(`Veto request ${tx.receipt.gasUsed} gas`);
 			});
 			await listing.appeal(1, { from: listee1, value: 1 }).then(tx => {
-				console.log(
-					"\x1b[35m%s\x1b[0m",
-					"Appeal request",
-					tx.receipt.gasUsed,
-					"gas"
-				);
+				log(`Appeal request ${tx.receipt.gasUsed} gas`);
 			});
 			await listing.verdict(1, true, { from: listee2 }).then(tx => {
-				console.log(
-					"\x1b[35m%s\x1b[0m",
-					"Verdict request",
-					tx.receipt.gasUsed,
-					"gas"
-				);
+				log(`Verdict request ${tx.receipt.gasUsed} gas`);
 			});
 			assert.fail("should have thrown before");
 		} catch (error) {
@@ -542,28 +384,13 @@ contract("ListingRewards", accounts => {
 			await listing
 				.newRewardRequest(1, { from: listee1, value: 2 })
 				.then(tx => {
-					console.log(
-						"\x1b[35m%s\x1b[0m",
-						"Adding new reward request",
-						tx.receipt.gasUsed,
-						"gas"
-					);
+					log(`Adding new reward request ${tx.receipt.gasUsed} gas`);
 				});
 			await listing.vetoRequest(1, { from: veto, value: 1 }).then(tx => {
-				console.log(
-					"\x1b[35m%s\x1b[0m",
-					"Veto request",
-					tx.receipt.gasUsed,
-					"gas"
-				);
+				log(`Veto request ${tx.receipt.gasUsed} gas`);
 			});
 			await listing.verdict(1, true, { from: owner }).then(tx => {
-				console.log(
-					"\x1b[35m%s\x1b[0m",
-					"Verdict request",
-					tx.receipt.gasUsed,
-					"gas"
-				);
+				log(`Verdict request ${tx.receipt.gasUsed} gas`);
 			});
 			assert.fail("should have thrown before");
 		} catch (error) {
@@ -575,20 +402,10 @@ contract("ListingRewards", accounts => {
 			await listing
 				.newRewardRequest(1, { from: listee1, value: 2 })
 				.then(tx => {
-					console.log(
-						"\x1b[35m%s\x1b[0m",
-						"Adding new reward request",
-						tx.receipt.gasUsed,
-						"gas"
-					);
+					log(`Adding new reward request ${tx.receipt.gasUsed} gas`);
 				});
 			await listing.verdict(1, true, { from: owner }).then(tx => {
-				console.log(
-					"\x1b[35m%s\x1b[0m",
-					"Verdict request",
-					tx.receipt.gasUsed,
-					"gas"
-				);
+				log(`Verdict request ${tx.receipt.gasUsed} gas`);
 			});
 			assert.fail("should have thrown before");
 		} catch (error) {
@@ -598,48 +415,42 @@ contract("ListingRewards", accounts => {
 
 	// Listee Payout
 
+	it("Listee demanding payout after 28 days without veto request", async () => {
+		await listing
+			.newRewardRequest(1, { from: listee1, value: 2 })
+			.then(tx => {
+				log(`Adding new reward request ${tx.receipt.gasUsed} gas`);
+			});
+		await web3.currentProvider.sendAsync(
+			{
+				jsonrpc: "2.0",
+				method: "evm_increaseTime",
+				params: [86400 * 29], // 86400 seconds in a day
+				id: new Date().getTime()
+			},
+			() => {}
+		);
+		await listing.listeePayout(1, { from: listee1 }).then(tx => {
+			log(`Listee Payout request ${tx.receipt.gasUsed} gas`);
+		});
+	});
 	it("Listee demanding payout within 28 days when verdict in favor", async () => {
 		await listing
 			.newRewardRequest(1, { from: listee1, value: 2 })
 			.then(tx => {
-				console.log(
-					"\x1b[35m%s\x1b[0m",
-					"Adding new reward request",
-					tx.receipt.gasUsed,
-					"gas"
-				);
+				log(`Adding new reward request ${tx.receipt.gasUsed} gas`);
 			});
 		await listing.vetoRequest(1, { from: veto, value: 1 }).then(tx => {
-			console.log(
-				"\x1b[35m%s\x1b[0m",
-				"Veto request",
-				tx.receipt.gasUsed,
-				"gas"
-			);
+			log(`Veto request ${tx.receipt.gasUsed} gas`);
 		});
 		await listing.appeal(1, { from: listee1, value: 1 }).then(tx => {
-			console.log(
-				"\x1b[35m%s\x1b[0m",
-				"Appeal request",
-				tx.receipt.gasUsed,
-				"gas"
-			);
+			log(`Appeal request ${tx.receipt.gasUsed} gas`);
 		});
 		await listing.verdict(1, true, { from: owner }).then(tx => {
-			console.log(
-				"\x1b[35m%s\x1b[0m",
-				"Verdict request",
-				tx.receipt.gasUsed,
-				"gas"
-			);
+			log(`Verdict request ${tx.receipt.gasUsed} gas`);
 		});
 		await listing.listeePayout(1, { from: listee1 }).then(tx => {
-			console.log(
-				"\x1b[35m%s\x1b[0m",
-				"Listee Payout request",
-				tx.receipt.gasUsed,
-				"gas"
-			);
+			log(`Listee Payout request ${tx.receipt.gasUsed} gas`);
 		});
 	});
 	it("Random user demanding payout within 28 days when verdict in favor", async () => {
@@ -647,45 +458,20 @@ contract("ListingRewards", accounts => {
 			await listing
 				.newRewardRequest(1, { from: listee1, value: 2 })
 				.then(tx => {
-					console.log(
-						"\x1b[35m%s\x1b[0m",
-						"Adding new reward request",
-						tx.receipt.gasUsed,
-						"gas"
-					);
+					log(`Adding new reward request ${tx.receipt.gasUsed} gas`);
 				});
 			await listing.vetoRequest(1, { from: veto, value: 1 }).then(tx => {
-				console.log(
-					"\x1b[35m%s\x1b[0m",
-					"Veto request",
-					tx.receipt.gasUsed,
-					"gas"
-				);
+				log(`Veto request ${tx.receipt.gasUsed} gas`);
 			});
 
 			await listing.appeal(1, { from: listee1, value: 1 }).then(tx => {
-				console.log(
-					"\x1b[35m%s\x1b[0m",
-					"Appeal request",
-					tx.receipt.gasUsed,
-					"gas"
-				);
+				log(`Appeal request ${tx.receipt.gasUsed} gas`);
 			});
 			await listing.verdict(1, true, { from: owner }).then(tx => {
-				console.log(
-					"\x1b[35m%s\x1b[0m",
-					"Verdict request",
-					tx.receipt.gasUsed,
-					"gas"
-				);
+				log(`Verdict request ${tx.receipt.gasUsed} gas`);
 			});
 			await listing.listeePayout(1, { from: listee2 }).then(tx => {
-				console.log(
-					"\x1b[35m%s\x1b[0m",
-					"Listee Payout request",
-					tx.receipt.gasUsed,
-					"gas"
-				);
+				log(`Listee Payout request ${tx.receipt.gasUsed} gas`);
 			});
 			assert.fail("should have thrown before");
 		} catch (error) {
@@ -697,40 +483,20 @@ contract("ListingRewards", accounts => {
 			await listing
 				.newRewardRequest(1, { from: listee1, value: 2 })
 				.then(tx => {
-					console.log(
-						"\x1b[35m%s\x1b[0m",
-						"Adding new reward request",
-						tx.receipt.gasUsed,
-						"gas"
-					);
+					log(`Adding new reward request ${tx.receipt.gasUsed} gas`);
 				});
 			await listing.vetoRequest(1, { from: veto, value: 1 }).then(tx => {
-				console.log(
-					"\x1b[35m%s\x1b[0m",
-					"Veto request",
-					tx.receipt.gasUsed,
-					"gas"
-				);
+				log(`Veto request ${tx.receipt.gasUsed} gas`);
 			});
 
 			await listing.appeal(1, { from: listee1, value: 1 }).then(tx => {
-				console.log(
-					"\x1b[35m%s\x1b[0m",
-					"Appeal request",
-					tx.receipt.gasUsed,
-					"gas"
-				);
+				log(`Appeal request ${tx.receipt.gasUsed} gas`);
 			});
 			await listing.verdict(1, false, { from: listee1 }).then(tx => {
-				console.log(tx.receipt.gasUsed, "gas");
+				log(`Verdict ${tx.receipt.gasUsed} gas`);
 			});
 			await listing.listeePayout(1, { from: listee1 }).then(tx => {
-				console.log(
-					"\x1b[35m%s\x1b[0m",
-					"Listee Payout request",
-					tx.receipt.gasUsed,
-					"gas"
-				);
+				log(`Listee Payout request ${tx.receipt.gasUsed} gas`);
 			});
 			assert.fail("should have thrown before");
 		} catch (error) {
@@ -742,38 +508,18 @@ contract("ListingRewards", accounts => {
 			await listing
 				.newRewardRequest(1, { from: listee1, value: 2 })
 				.then(tx => {
-					console.log(
-						"\x1b[35m%s\x1b[0m",
-						"Adding new reward request",
-						tx.receipt.gasUsed,
-						"gas"
-					);
+					log(`Adding new reward request ${tx.receipt.gasUsed} gas`);
 				});
 			await listing.vetoRequest(1, { from: veto, value: 1 }).then(tx => {
-				console.log(
-					"\x1b[35m%s\x1b[0m",
-					"Veto request",
-					tx.receipt.gasUsed,
-					"gas"
-				);
+				log(`Veto request ${tx.receipt.gasUsed} gas`);
 			});
 
 			await listing.appeal(1, { from: listee1, value: 1 }).then(tx => {
-				console.log(
-					"\x1b[35m%s\x1b[0m",
-					"Appeal request",
-					tx.receipt.gasUsed,
-					"gas"
-				);
+				log(`Appeal request ${tx.receipt.gasUsed} gas`);
 			});
 
 			await listing.listeePayout(1, { from: listee1 }).then(tx => {
-				console.log(
-					"\x1b[35m%s\x1b[0m",
-					"Listee Payout request",
-					tx.receipt.gasUsed,
-					"gas"
-				);
+				log(`Listee Payout request ${tx.receipt.gasUsed} gas`);
 			});
 			assert.fail("should have thrown before");
 		} catch (error) {
@@ -785,21 +531,11 @@ contract("ListingRewards", accounts => {
 			await listing
 				.newRewardRequest(1, { from: listee1, value: 2 })
 				.then(tx => {
-					console.log(
-						"\x1b[35m%s\x1b[0m",
-						"Adding new reward request",
-						tx.receipt.gasUsed,
-						"gas"
-					);
+					log(`Adding new reward request ${tx.receipt.gasUsed} gas`);
 				});
 
 			await listing.listeePayout(1, { from: listee1 }).then(tx => {
-				console.log(
-					"\x1b[35m%s\x1b[0m",
-					"Listee Payout request",
-					tx.receipt.gasUsed,
-					"gas"
-				);
+				log(`Listee Payout request ${tx.receipt.gasUsed} gas`);
 			});
 			assert.fail("should have thrown before");
 		} catch (error) {
@@ -813,41 +549,20 @@ contract("ListingRewards", accounts => {
 		await listing
 			.newRewardRequest(1, { from: listee1, value: 2 })
 			.then(tx => {
-				console.log(
-					"\x1b[35m%s\x1b[0m",
-					"Adding new reward request",
-					tx.receipt.gasUsed,
-					"gas"
-				);
+				log(`Adding new reward request ${tx.receipt.gasUsed} gas`);
 			});
 		await listing.vetoRequest(1, { from: veto, value: 1 }).then(tx => {
-			console.log(
-				"\x1b[35m%s\x1b[0m",
-				"Veto request",
-				tx.receipt.gasUsed,
-				"gas"
-			);
+			log(`Veto request ${tx.receipt.gasUsed} gas`);
 		});
 		await listing.appeal(1, { from: listee1, value: 1 }).then(tx => {
-			console.log(
-				"\x1b[35m%s\x1b[0m",
-				"Appeal request",
-				tx.receipt.gasUsed,
-				"gas"
-			);
+			log(`Appeal request ${tx.receipt.gasUsed} gas`);
 		});
-		console.log("\x1b[35m%s\x1b[0m", "Verdict request");
 		await listing.verdict(1, false, { from: owner }).then(tx => {
-			console.log(tx.receipt.gasUsed, "gas");
+			log(`Verdict request ${tx.receipt.gasUsed} gas`);
 		});
 
 		await listing.vetoPayout(1, { from: veto }).then(tx => {
-			console.log(
-				"\x1b[35m%s\x1b[0m",
-				"Veto Payout request",
-				tx.receipt.gasUsed,
-				"gas"
-			);
+			log(`Veto Payout request ${tx.receipt.gasUsed} gas`);
 		});
 	});
 	it("Random user demanding payout within 7 days when verdict in favor", async () => {
@@ -855,36 +570,21 @@ contract("ListingRewards", accounts => {
 			await listing
 				.newRewardRequest(1, { from: listee1, value: 2 })
 				.then(tx => {
-					console.log(
-						"\x1b[35m%s\x1b[0m",
-						"Adding new reward request",
-						tx.receipt.gasUsed,
-						"gas"
-					);
+					log(`Adding new reward request ${tx.receipt.gasUsed} gas`);
 				});
 			await listing.vetoRequest(1, { from: veto, value: 1 }).then(tx => {
-				console.log(
-					"\x1b[35m%s\x1b[0m",
-					"Veto request",
-					tx.receipt.gasUsed,
-					"gas"
-				);
+				log(`Veto request ${tx.receipt.gasUsed} gas`);
 			});
 
 			await listing.appeal(1, { from: listee1, value: 1 }).then(tx => {
-				console.log(
-					"\x1b[35m%s\x1b[0m",
-					"Appeal request",
-					tx.receipt.gasUsed,
-					"gas"
-				);
+				log(`Appeal request ${tx.receipt.gasUsed} gas`);
 			});
 			await listing.verdict(1, false, { from: owner }).then(tx => {
-				console.log(tx.receipt.gasUsed, "gas");
+				log(`Verdict request ${tx.receipt.gasUsed} gas`);
 			});
 
 			await listing.vetoPayout(1, { from: listee2 }).then(tx => {
-				console.log(tx.receipt.gasUsed, "gas");
+				log(`Veto Payout request ${tx.receipt.gasUsed} gas`);
 			});
 			assert.fail("should have thrown before");
 		} catch (error) {
@@ -896,84 +596,66 @@ contract("ListingRewards", accounts => {
 			await listing
 				.newRewardRequest(1, { from: listee1, value: 2 })
 				.then(tx => {
-					console.log(
-						"\x1b[35m%s\x1b[0m",
-						"Adding new reward request",
-						tx.receipt.gasUsed,
-						"gas"
-					);
+					log(`Adding new reward request ${tx.receipt.gasUsed} gas`);
 				});
 			await listing.vetoRequest(1, { from: veto, value: 1 }).then(tx => {
-				console.log(
-					"\x1b[35m%s\x1b[0m",
-					"Veto request",
-					tx.receipt.gasUsed,
-					"gas"
-				);
+				log(`Veto request ${tx.receipt.gasUsed} gas`);
 			});
 
 			await listing.appeal(1, { from: listee1, value: 1 }).then(tx => {
-				console.log(
-					"\x1b[35m%s\x1b[0m",
-					"Appeal request",
-					tx.receipt.gasUsed,
-					"gas"
-				);
+				log(`Appeal request ${tx.receipt.gasUsed} gas`);
 			});
 			await listing.verdict(1, true, { from: listee1 }).then(tx => {
-				console.log(
-					"\x1b[35m%s\x1b[0m",
-					"Verdict request",
-					tx.receipt.gasUsed,
-					"gas"
-				);
+				log(`Verdict request ${tx.receipt.gasUsed} gas`);
 			});
 
 			await listing.vetoPayout(1, { from: veto }).then(tx => {
-				console.log(
-					"\x1b[35m%s\x1b[0m",
-					"Veto Payout request",
-					tx.receipt.gasUsed,
-					"gas"
-				);
+				log(`Veto Payout request ${tx.receipt.gasUsed} gas`);
 			});
 			assert.fail("should have thrown before");
 		} catch (error) {
 			assertJump(error);
 		}
 	});
+	it("Veto demanding payout when no appeal and 7 days past the veto", async () => {
+		await listing
+			.newRewardRequest(1, { from: listee1, value: 2 })
+			.then(tx => {
+				log(`Adding new reward request ${tx.receipt.gasUsed} gas`);
+			});
+		await listing.vetoRequest(1, { from: veto, value: 1 }).then(tx => {
+			log(`Veto request ${tx.receipt.gasUsed} gas`);
+		});
+		await web3.currentProvider.sendAsync(
+			{
+				jsonrpc: "2.0",
+				method: "evm_increaseTime",
+				params: [86400 * 8], // 86400 seconds in a day
+				id: new Date().getTime()
+			},
+			() => {}
+		);
+		await listing.vetoPayout(1, { from: veto }).then(tx => {
+			log(`Veto request ${tx.receipt.gasUsed} gas`);
+		});
+	});
 	it("Veto demanding payout when verdict is yet to decide the result", async () => {
 		try {
 			await listing
 				.newRewardRequest(1, { from: listee1, value: 2 })
 				.then(tx => {
-					console.log(
-						"\x1b[35m%s\x1b[0m",
-						"Adding new reward request",
-						tx.receipt.gasUsed,
-						"gas"
-					);
+					log(`Adding new reward request ${tx.receipt.gasUsed} gas`);
 				});
 			await listing.vetoRequest(1, { from: veto, value: 1 }).then(tx => {
-				console.log(
-					"\x1b[35m%s\x1b[0m",
-					"Veto request",
-					tx.receipt.gasUsed,
-					"gas"
-				);
+				log(`Veto request ${tx.receipt.gasUsed} gas`);
 			});
 
 			await listing.appeal(1, { from: listee1, value: 1 }).then(tx => {
-				console.log(
-					"\x1b[35m%s\x1b[0m",
-					"Appeal request",
-					tx.receipt.gasUsed,
-					"gas"
-				);
+				log(`Appeal request ${tx.receipt.gasUsed} gas`);
 			});
 
 			await listing.vetoPayout(1, { from: listee1 }).then(tx => {
-				console.log(tx.receipt.gasUsed, "gas");
+				log(`Veto Payout request ${tx.receipt.gasUsed} gas`);
 			});
 			assert.fail("should have thrown before");
 		} catch (error) {
@@ -985,21 +667,11 @@ contract("ListingRewards", accounts => {
 			await listing
 				.newRewardRequest(1, { from: listee1, value: 2 })
 				.then(tx => {
-					console.log(
-						"\x1b[35m%s\x1b[0m",
-						"Adding new reward request",
-						tx.receipt.gasUsed,
-						"gas"
-					);
+					log(`Adding new reward request ${tx.receipt.gasUsed} gas`);
 				});
 
 			await listing.vetoPayout(1, { from: veto }).then(tx => {
-				console.log(
-					"\x1b[35m%s\x1b[0m",
-					"Veto Payout request",
-					tx.receipt.gasUsed,
-					"gas"
-				);
+				log(`Veto Payout request ${tx.receipt.gasUsed} gas`);
 			});
 			assert.fail("should have thrown before");
 		} catch (error) {
