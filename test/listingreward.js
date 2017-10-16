@@ -11,24 +11,6 @@ contract("ListingRewards", accounts => {
 	beforeEach(async () => {
 		listing = await ListingRewards.new(owner, 2, 2);
 	});
-	// ADDING LISTEE
-
-	it("Adding listees", async () => {
-		await listing.addListee(12, { from: listee1 }).then(tx => {
-			log(`Adding listee ${tx.receipt.gasUsed} gas`);
-		});
-		await listing.addListee(0, { from: listee2 }).then(tx => {
-			log(`Adding listee ${tx.receipt.gasUsed} gas`);
-		});
-		const listee1Result = await listing.getRequestID.call({
-			from: listee1
-		});
-		assert.equal(listee1Result, 12);
-		const listee2Result = await listing.getRequestID.call({
-			from: listee2
-		});
-		assert.equal(listee2Result, 0);
-	});
 
 	// CREATING NEW REWARD REQUEST
 
@@ -57,7 +39,7 @@ contract("ListingRewards", accounts => {
 		const listee1Result = await listing.getRequestID.call({
 			from: listee1
 		});
-		assert.equal(listee1Result, 1);
+		assert.equal(listee1Result, listee1);
 	});
 	it("Creating a new Reward Request with equal value to deposit", async () => {
 		await listing
@@ -68,7 +50,7 @@ contract("ListingRewards", accounts => {
 		const listee1Result = await listing.getRequestID.call({
 			from: listee1
 		});
-		assert.equal(listee1Result, 1);
+		assert.equal(listee1Result, listee1);
 	});
 	it("One listee applying for more then one request", async () => {
 		try {
@@ -117,7 +99,7 @@ contract("ListingRewards", accounts => {
 				.then(tx => {
 					log(`Adding new reward request ${tx.receipt.gasUsed} gas`);
 				});
-			await listing.vetoRequest(1).then(tx => {
+			await listing.vetoRequest(listee1).then(tx => {
 				log(`Veto request ${tx.receipt.gasUsed} gas`);
 			});
 
@@ -158,7 +140,7 @@ contract("ListingRewards", accounts => {
 				.then(tx => {
 					log(`Adding new reward request ${tx.receipt.gasUsed} gas`);
 				});
-			await listing.vetoRequest(1, { from: veto, value: 0 }).then(tx => {
+			await listing.vetoRequest(listee1, { from: veto, value: 0 }).then(tx => {
 				log(`Veto Request ${tx.receipt.gasUsed} gas`);
 			});
 			assert.fail("should have thrown before");
@@ -172,7 +154,7 @@ contract("ListingRewards", accounts => {
 			.then(tx => {
 				log(`Adding new reward request ${tx.receipt.gasUsed} gas`);
 			});
-		await listing.vetoRequest(1, { from: veto, value: 1 }).then(tx => {
+		await listing.vetoRequest(listee1, { from: veto, value: 1 }).then(tx => {
 			log(`Veto request ${tx.receipt.gasUsed} gas`);
 		});
 	});
@@ -184,7 +166,7 @@ contract("ListingRewards", accounts => {
 					log(`Adding new reward request ${tx.receipt.gasUsed} gas`);
 				});
 			await listing
-				.vetoRequest(1, { from: listee1, value: 1 })
+				.vetoRequest(listee1, { from: listee1, value: 1 })
 				.then(tx => {
 					log(`Veto request ${tx.receipt.gasUsed} gas`);
 				});
@@ -209,7 +191,7 @@ contract("ListingRewards", accounts => {
 				},
 				() => {}
 			);
-			await listing.vetoRequest(1, { from: veto, value: 1 }).then(tx => {
+			await listing.vetoRequest(listee1, { from: veto, value: 1 }).then(tx => {
 				log(`Veto request ${tx.receipt.gasUsed} gas`);
 			});
 			assert.fail("should have thrown before");
@@ -219,7 +201,7 @@ contract("ListingRewards", accounts => {
 	});
 	it("Creating a new Veto request without the listing", async () => {
 		try {
-			await listing.vetoRequest(1, { from: veto, value: 1 }).then(tx => {
+			await listing.vetoRequest(listee1, { from: veto, value: 1 }).then(tx => {
 				log(`Veto request ${tx.receipt.gasUsed} gas`);
 			});
 			assert.fail("should have thrown before");
@@ -234,10 +216,10 @@ contract("ListingRewards", accounts => {
 				.then(tx => {
 					log(`Adding new reward request ${tx.receipt.gasUsed} gas`);
 				});
-			await listing.vetoRequest(1, { from: veto, value: 1 }).then(tx => {
+			await listing.vetoRequest(listee1, { from: veto, value: 1 }).then(tx => {
 				log(`Veto request ${tx.receipt.gasUsed} gas`);
 			});
-			await listing.vetoRequest(1, { from: veto, value: 1 }).then(tx => {
+			await listing.vetoRequest(listee1, { from: veto, value: 1 }).then(tx => {
 				log(`Veto request ${tx.receipt.gasUsed} gas`);
 			});
 			assert.fail("should have thrown before");
@@ -255,10 +237,10 @@ contract("ListingRewards", accounts => {
 				.then(tx => {
 					log(`Adding new reward request ${tx.receipt.gasUsed} gas`);
 				});
-			await listing.vetoRequest(1, { from: veto, value: 1 }).then(tx => {
+			await listing.vetoRequest(listee1, { from: veto, value: 1 }).then(tx => {
 				log(`Veto request ${tx.receipt.gasUsed} gas`);
 			});
-			await listing.appeal(1, { from: listee1, value: 0 }).then(tx => {
+			await listing.appeal(listee1, { from: listee1, value: 0 }).then(tx => {
 				log(`Appeal request ${tx.receipt.gasUsed} gas`);
 			});
 			assert.fail("should have thrown before");
@@ -272,10 +254,10 @@ contract("ListingRewards", accounts => {
 			.then(tx => {
 				log(`Adding new reward request  ${tx.receipt.gasUsed} gas`);
 			});
-		await listing.vetoRequest(1, { from: veto, value: 1 }).then(tx => {
+		await listing.vetoRequest(listee1, { from: veto, value: 1 }).then(tx => {
 			log(`Veto request ${tx.receipt.gasUsed} gas`);
 		});
-		await listing.appeal(1, { from: listee1, value: 1 }).then(tx => {
+		await listing.appeal(listee1, { from: listee1, value: 1 }).then(tx => {
 			log(`Appeal request  ${tx.receipt.gasUsed} gas`);
 		});
 	});
@@ -286,10 +268,10 @@ contract("ListingRewards", accounts => {
 				.then(tx => {
 					log(`Adding new reward request ${tx.receipt.gasUsed} gas`);
 				});
-			await listing.vetoRequest(1, { from: veto, value: 1 }).then(tx => {
+			await listing.vetoRequest(listee1, { from: veto, value: 1 }).then(tx => {
 				log(`Veto request ${tx.receipt.gasUsed} gas`);
 			});
-			await listing.appeal(1, { from: listee2, value: 1 }).then(tx => {
+			await listing.appeal(listee1, { from: listee2, value: 1 }).then(tx => {
 				log(`Appeal request ${tx.receipt.gasUsed} gas`);
 			});
 			assert.fail("should have thrown before");
@@ -304,7 +286,7 @@ contract("ListingRewards", accounts => {
 				.then(tx => {
 					log(`Adding new reward request ${tx.receipt.gasUsed} gas`);
 				});
-			await listing.vetoRequest(1, { from: veto, value: 1 }).then(tx => {
+			await listing.vetoRequest(listee1, { from: veto, value: 1 }).then(tx => {
 				log(`Veto request ${tx.receipt.gasUsed} gas`);
 			});
 			await web3.currentProvider.sendAsync(
@@ -316,7 +298,7 @@ contract("ListingRewards", accounts => {
 				},
 				() => {}
 			);
-			await listing.appeal(1, { from: listee1, value: 1 }).then(tx => {
+			await listing.appeal(listee1, { from: listee1, value: 1 }).then(tx => {
 				log(`Appeal request ${tx.receipt.gasUsed} gas`);
 			});
 			assert.fail("should have thrown before");
@@ -331,7 +313,7 @@ contract("ListingRewards", accounts => {
 				.then(tx => {
 					log(`Adding new reward request ${tx.receipt.gasUsed} gas`);
 				});
-			await listing.appeal(1, { from: listee1, value: 1 }).then(tx => {
+			await listing.appeal(listee1, { from: listee1, value: 1 }).then(tx => {
 				log(`Appeal request ${tx.receipt.gasUsed} gas`);
 			});
 			assert.fail("should have thrown before");
@@ -348,13 +330,13 @@ contract("ListingRewards", accounts => {
 			.then(tx => {
 				log(`Adding new reward request ${tx.receipt.gasUsed} gas`);
 			});
-		await listing.vetoRequest(1, { from: veto, value: 1 }).then(tx => {
+		await listing.vetoRequest(listee1, { from: veto, value: 1 }).then(tx => {
 			log(`Veto request ${tx.receipt.gasUsed} gas`);
 		});
-		await listing.appeal(1, { from: listee1, value: 1 }).then(tx => {
+		await listing.appeal(listee1, { from: listee1, value: 1 }).then(tx => {
 			log(`Appeal request ${tx.receipt.gasUsed} gas`);
 		});
-		await listing.verdict(1, true, { from: owner }).then(tx => {
+		await listing.verdict(listee1, true, { from: owner }).then(tx => {
 			log(`Verdict request ${tx.receipt.gasUsed} gas`);
 		});
 	});
@@ -365,13 +347,13 @@ contract("ListingRewards", accounts => {
 				.then(tx => {
 					log(`Adding new reward request ${tx.receipt.gasUsed} gas`);
 				});
-			await listing.vetoRequest(1, { from: veto, value: 1 }).then(tx => {
+			await listing.vetoRequest(listee1, { from: veto, value: 1 }).then(tx => {
 				log(`Veto request ${tx.receipt.gasUsed} gas`);
 			});
-			await listing.appeal(1, { from: listee1, value: 1 }).then(tx => {
+			await listing.appeal(listee1, { from: listee1, value: 1 }).then(tx => {
 				log(`Appeal request ${tx.receipt.gasUsed} gas`);
 			});
-			await listing.verdict(1, true, { from: listee2 }).then(tx => {
+			await listing.verdict(listee1, true, { from: listee2 }).then(tx => {
 				log(`Verdict request ${tx.receipt.gasUsed} gas`);
 			});
 			assert.fail("should have thrown before");
@@ -386,10 +368,10 @@ contract("ListingRewards", accounts => {
 				.then(tx => {
 					log(`Adding new reward request ${tx.receipt.gasUsed} gas`);
 				});
-			await listing.vetoRequest(1, { from: veto, value: 1 }).then(tx => {
+			await listing.vetoRequest(listee1, { from: veto, value: 1 }).then(tx => {
 				log(`Veto request ${tx.receipt.gasUsed} gas`);
 			});
-			await listing.verdict(1, true, { from: owner }).then(tx => {
+			await listing.verdict(listee1, true, { from: owner }).then(tx => {
 				log(`Verdict request ${tx.receipt.gasUsed} gas`);
 			});
 			assert.fail("should have thrown before");
@@ -404,7 +386,7 @@ contract("ListingRewards", accounts => {
 				.then(tx => {
 					log(`Adding new reward request ${tx.receipt.gasUsed} gas`);
 				});
-			await listing.verdict(1, true, { from: owner }).then(tx => {
+			await listing.verdict(listee1, true, { from: owner }).then(tx => {
 				log(`Verdict request ${tx.receipt.gasUsed} gas`);
 			});
 			assert.fail("should have thrown before");
@@ -430,7 +412,7 @@ contract("ListingRewards", accounts => {
 			},
 			() => {}
 		);
-		await listing.listeePayout(1, { from: listee1 }).then(tx => {
+		await listing.listeePayout(listee1, { from: listee1 }).then(tx => {
 			log(`Listee Payout request ${tx.receipt.gasUsed} gas`);
 		});
 	});
@@ -440,16 +422,16 @@ contract("ListingRewards", accounts => {
 			.then(tx => {
 				log(`Adding new reward request ${tx.receipt.gasUsed} gas`);
 			});
-		await listing.vetoRequest(1, { from: veto, value: 1 }).then(tx => {
+		await listing.vetoRequest(listee1, { from: veto, value: 1 }).then(tx => {
 			log(`Veto request ${tx.receipt.gasUsed} gas`);
 		});
-		await listing.appeal(1, { from: listee1, value: 1 }).then(tx => {
+		await listing.appeal(listee1, { from: listee1, value: 1 }).then(tx => {
 			log(`Appeal request ${tx.receipt.gasUsed} gas`);
 		});
-		await listing.verdict(1, true, { from: owner }).then(tx => {
+		await listing.verdict(listee1, true, { from: owner }).then(tx => {
 			log(`Verdict request ${tx.receipt.gasUsed} gas`);
 		});
-		await listing.listeePayout(1, { from: listee1 }).then(tx => {
+		await listing.listeePayout(listee1, { from: listee1 }).then(tx => {
 			log(`Listee Payout request ${tx.receipt.gasUsed} gas`);
 		});
 	});
@@ -460,17 +442,17 @@ contract("ListingRewards", accounts => {
 				.then(tx => {
 					log(`Adding new reward request ${tx.receipt.gasUsed} gas`);
 				});
-			await listing.vetoRequest(1, { from: veto, value: 1 }).then(tx => {
+			await listing.vetoRequest(listee1, { from: veto, value: 1 }).then(tx => {
 				log(`Veto request ${tx.receipt.gasUsed} gas`);
 			});
 
-			await listing.appeal(1, { from: listee1, value: 1 }).then(tx => {
+			await listing.appeal(listee1, { from: listee1, value: 1 }).then(tx => {
 				log(`Appeal request ${tx.receipt.gasUsed} gas`);
 			});
-			await listing.verdict(1, true, { from: owner }).then(tx => {
+			await listing.verdict(listee1, true, { from: owner }).then(tx => {
 				log(`Verdict request ${tx.receipt.gasUsed} gas`);
 			});
-			await listing.listeePayout(1, { from: listee2 }).then(tx => {
+			await listing.listeePayout(listee1, { from: listee2 }).then(tx => {
 				log(`Listee Payout request ${tx.receipt.gasUsed} gas`);
 			});
 			assert.fail("should have thrown before");
@@ -485,17 +467,17 @@ contract("ListingRewards", accounts => {
 				.then(tx => {
 					log(`Adding new reward request ${tx.receipt.gasUsed} gas`);
 				});
-			await listing.vetoRequest(1, { from: veto, value: 1 }).then(tx => {
+			await listing.vetoRequest(listee1, { from: veto, value: 1 }).then(tx => {
 				log(`Veto request ${tx.receipt.gasUsed} gas`);
 			});
 
-			await listing.appeal(1, { from: listee1, value: 1 }).then(tx => {
+			await listing.appeal(listee1, { from: listee1, value: 1 }).then(tx => {
 				log(`Appeal request ${tx.receipt.gasUsed} gas`);
 			});
-			await listing.verdict(1, false, { from: listee1 }).then(tx => {
+			await listing.verdict(listee1, false, { from: listee1 }).then(tx => {
 				log(`Verdict ${tx.receipt.gasUsed} gas`);
 			});
-			await listing.listeePayout(1, { from: listee1 }).then(tx => {
+			await listing.listeePayout(listee1, { from: listee1 }).then(tx => {
 				log(`Listee Payout request ${tx.receipt.gasUsed} gas`);
 			});
 			assert.fail("should have thrown before");
@@ -510,15 +492,15 @@ contract("ListingRewards", accounts => {
 				.then(tx => {
 					log(`Adding new reward request ${tx.receipt.gasUsed} gas`);
 				});
-			await listing.vetoRequest(1, { from: veto, value: 1 }).then(tx => {
+			await listing.vetoRequest(listee1, { from: veto, value: 1 }).then(tx => {
 				log(`Veto request ${tx.receipt.gasUsed} gas`);
 			});
 
-			await listing.appeal(1, { from: listee1, value: 1 }).then(tx => {
+			await listing.appeal(listee1, { from: listee1, value: 1 }).then(tx => {
 				log(`Appeal request ${tx.receipt.gasUsed} gas`);
 			});
 
-			await listing.listeePayout(1, { from: listee1 }).then(tx => {
+			await listing.listeePayout(listee1, { from: listee1 }).then(tx => {
 				log(`Listee Payout request ${tx.receipt.gasUsed} gas`);
 			});
 			assert.fail("should have thrown before");
@@ -534,7 +516,7 @@ contract("ListingRewards", accounts => {
 					log(`Adding new reward request ${tx.receipt.gasUsed} gas`);
 				});
 
-			await listing.listeePayout(1, { from: listee1 }).then(tx => {
+			await listing.listeePayout(listee1, { from: listee1 }).then(tx => {
 				log(`Listee Payout request ${tx.receipt.gasUsed} gas`);
 			});
 			assert.fail("should have thrown before");
@@ -551,17 +533,17 @@ contract("ListingRewards", accounts => {
 			.then(tx => {
 				log(`Adding new reward request ${tx.receipt.gasUsed} gas`);
 			});
-		await listing.vetoRequest(1, { from: veto, value: 1 }).then(tx => {
+		await listing.vetoRequest(listee1, { from: veto, value: 1 }).then(tx => {
 			log(`Veto request ${tx.receipt.gasUsed} gas`);
 		});
-		await listing.appeal(1, { from: listee1, value: 1 }).then(tx => {
+		await listing.appeal(listee1, { from: listee1, value: 1 }).then(tx => {
 			log(`Appeal request ${tx.receipt.gasUsed} gas`);
 		});
-		await listing.verdict(1, false, { from: owner }).then(tx => {
+		await listing.verdict(listee1, false, { from: owner }).then(tx => {
 			log(`Verdict request ${tx.receipt.gasUsed} gas`);
 		});
 
-		await listing.vetoPayout(1, { from: veto }).then(tx => {
+		await listing.vetoPayout(listee1, { from: veto }).then(tx => {
 			log(`Veto Payout request ${tx.receipt.gasUsed} gas`);
 		});
 	});
@@ -572,18 +554,18 @@ contract("ListingRewards", accounts => {
 				.then(tx => {
 					log(`Adding new reward request ${tx.receipt.gasUsed} gas`);
 				});
-			await listing.vetoRequest(1, { from: veto, value: 1 }).then(tx => {
+			await listing.vetoRequest(listee1, { from: veto, value: 1 }).then(tx => {
 				log(`Veto request ${tx.receipt.gasUsed} gas`);
 			});
 
-			await listing.appeal(1, { from: listee1, value: 1 }).then(tx => {
+			await listing.appeal(listee1, { from: listee1, value: 1 }).then(tx => {
 				log(`Appeal request ${tx.receipt.gasUsed} gas`);
 			});
-			await listing.verdict(1, false, { from: owner }).then(tx => {
+			await listing.verdict(listee1, false, { from: owner }).then(tx => {
 				log(`Verdict request ${tx.receipt.gasUsed} gas`);
 			});
 
-			await listing.vetoPayout(1, { from: listee2 }).then(tx => {
+			await listing.vetoPayout(listee1, { from: listee2 }).then(tx => {
 				log(`Veto Payout request ${tx.receipt.gasUsed} gas`);
 			});
 			assert.fail("should have thrown before");
@@ -598,18 +580,18 @@ contract("ListingRewards", accounts => {
 				.then(tx => {
 					log(`Adding new reward request ${tx.receipt.gasUsed} gas`);
 				});
-			await listing.vetoRequest(1, { from: veto, value: 1 }).then(tx => {
+			await listing.vetoRequest(listee1, { from: veto, value: 1 }).then(tx => {
 				log(`Veto request ${tx.receipt.gasUsed} gas`);
 			});
 
-			await listing.appeal(1, { from: listee1, value: 1 }).then(tx => {
+			await listing.appeal(listee1, { from: listee1, value: 1 }).then(tx => {
 				log(`Appeal request ${tx.receipt.gasUsed} gas`);
 			});
-			await listing.verdict(1, true, { from: listee1 }).then(tx => {
+			await listing.verdict(listee1, true, { from: listee1 }).then(tx => {
 				log(`Verdict request ${tx.receipt.gasUsed} gas`);
 			});
 
-			await listing.vetoPayout(1, { from: veto }).then(tx => {
+			await listing.vetoPayout(listee1, { from: veto }).then(tx => {
 				log(`Veto Payout request ${tx.receipt.gasUsed} gas`);
 			});
 			assert.fail("should have thrown before");
@@ -623,7 +605,7 @@ contract("ListingRewards", accounts => {
 			.then(tx => {
 				log(`Adding new reward request ${tx.receipt.gasUsed} gas`);
 			});
-		await listing.vetoRequest(1, { from: veto, value: 1 }).then(tx => {
+		await listing.vetoRequest(listee1, { from: veto, value: 1 }).then(tx => {
 			log(`Veto request ${tx.receipt.gasUsed} gas`);
 		});
 		await web3.currentProvider.sendAsync(
@@ -635,7 +617,7 @@ contract("ListingRewards", accounts => {
 			},
 			() => {}
 		);
-		await listing.vetoPayout(1, { from: veto }).then(tx => {
+		await listing.vetoPayout(listee1, { from: veto }).then(tx => {
 			log(`Veto request ${tx.receipt.gasUsed} gas`);
 		});
 	});
@@ -646,15 +628,15 @@ contract("ListingRewards", accounts => {
 				.then(tx => {
 					log(`Adding new reward request ${tx.receipt.gasUsed} gas`);
 				});
-			await listing.vetoRequest(1, { from: veto, value: 1 }).then(tx => {
+			await listing.vetoRequest(listee1, { from: veto, value: 1 }).then(tx => {
 				log(`Veto request ${tx.receipt.gasUsed} gas`);
 			});
 
-			await listing.appeal(1, { from: listee1, value: 1 }).then(tx => {
+			await listing.appeal(listee1, { from: listee1, value: 1 }).then(tx => {
 				log(`Appeal request ${tx.receipt.gasUsed} gas`);
 			});
 
-			await listing.vetoPayout(1, { from: listee1 }).then(tx => {
+			await listing.vetoPayout(listee1, { from: listee1 }).then(tx => {
 				log(`Veto Payout request ${tx.receipt.gasUsed} gas`);
 			});
 			assert.fail("should have thrown before");
@@ -670,7 +652,7 @@ contract("ListingRewards", accounts => {
 					log(`Adding new reward request ${tx.receipt.gasUsed} gas`);
 				});
 
-			await listing.vetoPayout(1, { from: veto }).then(tx => {
+			await listing.vetoPayout(listee1, { from: veto }).then(tx => {
 				log(`Veto Payout request ${tx.receipt.gasUsed} gas`);
 			});
 			assert.fail("should have thrown before");
