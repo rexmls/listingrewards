@@ -57,8 +57,10 @@ contract ListingRewards {
         uint dateCreated;
         uint deposit;
         bool appeal;
-        verdictTypes verdictWinner;  // Will be used to indicate the winner of the verdict `1` for listee and `2` for vetos
-        vetosStruct vetos;
+        bool flag;
+        vetosStruct vetosInFavor;
+        vetosStruct vetosAgainst;
+        uint vetoDateCreated;
     }
 
     address creator;
@@ -66,18 +68,17 @@ contract ListingRewards {
     uint public rewardAmount;
     uint public depositAmount;
     uint public trustAmount;
-    // uint[] emptySlots;
     mapping (address => listingRewardRequestsStruct) requests;
-    // listingRewardRequestsStruct[] requests;
 
     mapping (address => listeeStruct) listees;
-    mapping (address => address[]) vetosToRequestMapping;
+    mapping (address => address[]) vetosAgainstToRequestMapping;
+    mapping (address => address[]) vetosInFavorToRequestMapping;
 
     // ENUMS
 
-    enum verdictTypes {NotDeclared, ListeeWon, VetosWon} 
     enum vetosState {NotActive, Created, Withdrawn}
     enum RequestEventTypes {New, Cancel, Payout, Vetoed, Appeal, Verdict}
+    enum vetoType {InFavor, Against}
 
     // EVENTS
 
@@ -97,14 +98,6 @@ contract ListingRewards {
 
     modifier isValidAddress() {
         if (requests[msg.sender].listeeAddress != 0x00) {
-            _;
-        } else {
-            revert();
-        }
-    }
-    
-    modifier hasVetoRequest() {
-        if (requests[msg.sender].vetos.numberOfVetos <= 0) {
             _;
         } else {
             revert();
@@ -168,7 +161,9 @@ contract ListingRewards {
         RequestEvent(RequestEventTypes.New, msg.sender, 0);
     }
 
-    function cancelRewardRequest() payable isValidAddress hasVetoRequest {
+    function cancelRewardRequest() payable isValidAddress {
+
+        if (requests[msg.sender].flag) revert();
 
         listingRewardRequestsStruct storage request = requests[msg.sender];
 
@@ -184,135 +179,128 @@ contract ListingRewards {
         RequestEvent(RequestEventTypes.Cancel, msg.sender, 0);
     }
 
-    function vetoRequest(address listingAddress) payable {
+    function flagListing(address listingAddress) payable {
+        if (listingAddress == 0x00) revert();
+
+        if (msg.sender == listingAddress) revert();
+
+        if (requests[msg.sender].flag) revert();
+        // Check if it's 28 days past reward request
+        if (now - requests[listingAddress].dateCreated > (1 * 28 days))
+            revert();
+
+        // take 10% of deposit amount
+        if (msg.value < trustAmount) revert();
+
+        requests[msg.sender].flag = true;
+        requests[listingAddress].vetoDateCreated = now;
+
+        vetosStruct storage vetoAgainstObject = requests[listingAddress].vetosAgainst;
+        vetosStruct storage vetoInfavorObject = requests[listingAddress].vetosInFavor;
+
+        vetoAgainstObject.vetos[msg.sender] = vetosState.Created;
+        vetosAgainstToRequestMapping[msg.sender].push(listingAddress);
+
+        vetoInfavorObject.vetos[requests[listingAddress].listeeAddress] = vetosState.Created;
+        vetosInFavorToRequestMapping[requests[listingAddress].listeeAddress].push(listingAddress);
+
+        vetoAgainstObject.numberOfVetos += 1;
+        vetoInfavorObject.numberOfVetos += 1;
+    }
+
+    function vetoRequest(address listingAddress, vetoType typeOfVeto) payable {
+        if (listingAddress == 0x00) revert();
         // Avoid self veto
         if (msg.sender == listingAddress) revert();
         // Check if it's 28 days past reward request
         if (now - requests[listingAddress].dateCreated > (1 * 28 days))
             revert();
-        // Check if its 7 days past the first veto request
-        if (requests[listingAddress].vetos.numberOfVetos != 0 && now - requests[listingAddress].vetos.dateCreated > (1 * 7 days)) revert();
-        // Check if the veto already exist
-        if (requests[listingAddress].vetos.vetos[msg.sender] != vetosState.NotActive) revert();
+
         // take 10% of deposit amount
         if (msg.value < trustAmount) revert();
 
-        requests[listingAddress].vetos.vetos[msg.sender] = vetosState.Created;
-        vetosToRequestMapping[msg.sender].push(listingAddress);
-
-        //Check if no veto request is raised to add veto creation date
-        if (requests[listingAddress].vetos.numberOfVetos == 0) {
-            requests[listingAddress].vetos.dateCreated = now;
+        if (typeOfVeto == vetoType.Against) {
+            // Check if its 7 days past the first veto request
+            vetosStruct storage vetoAgainstObject = requests[listingAddress].vetosAgainst;
+            if (vetoAgainstObject.numberOfVetos != 0 && now - requests[listingAddress].vetoDateCreated > (1 * 7 days)) revert();
+            // Check if the veto already exist
+            if (vetoAgainstObject.vetos[msg.sender] != vetosState.NotActive) revert();
+            vetoAgainstObject.vetos[msg.sender] = vetosState.Created;
+            vetosAgainstToRequestMapping[msg.sender].push(listingAddress);
+            vetoAgainstObject.numberOfVetos += 1;
+        } else {
+            // Check if its 7 days past the first veto request
+            vetosStruct storage vetoInfavorObject = requests[listingAddress].vetosInFavor;
+            if (vetoInfavorObject.numberOfVetos != 0 && now - requests[listingAddress].vetoDateCreated > (1 * 7 days)) revert();
+            // Check if the veto already exist
+            if (vetoInfavorObject.vetos[msg.sender] != vetosState.NotActive) revert();
+            vetoInfavorObject.vetos[msg.sender] = vetosState.Created;
+            vetosInFavorToRequestMapping[msg.sender].push(listingAddress);
+            vetoInfavorObject.numberOfVetos += 1;
         }
-
-        requests[listingAddress].vetos.numberOfVetos += 1;
 
         RequestEvent(RequestEventTypes.Vetoed, listingAddress, 0);
 
     }
 
-    function appeal(address listingAddress) payable {
-        if (msg.sender != listingAddress)
-            revert();
-        // Check if its 7 days past the first veto request
-        if (now - requests[listingAddress].vetos.dateCreated > (1 * 7 days)) revert();
-        // Check if their are any vetos
-        if (requests[listingAddress].vetos.numberOfVetos == 0) revert();
-        // take 10% of deposit amount
-        if (msg.value < trustAmount) revert();
-
-        requests[listingAddress].appeal = true;
-
-        RequestEvent(RequestEventTypes.Appeal, listingAddress, 0);
-    }
-
-    function verdict(address listingAddress, bool inFavorOfListee) isOwner {
-        if (listingAddress <= 0) revert();
-        // Check if their are any vetos
-        if (requests[listingAddress].vetos.numberOfVetos == 0) revert();
-        // Check if their is no appeal
-        if (requests[listingAddress].appeal == false) revert();
-
-        if (inFavorOfListee) {
-            requests[listingAddress].verdictWinner = verdictTypes.ListeeWon;
-          } else {
-            requests[listingAddress].verdictWinner = verdictTypes.VetosWon;
-         }
-
-        RequestEvent(RequestEventTypes.Verdict, listingAddress, (inFavorOfListee)? 1 : 0);
-    }
-
     function listeePayout(address listingAddress) payable {
         // Check if the idx exists
-        if (requests[msg.sender].listeeAddress != listingAddress) revert();
+        if (listingAddress == 0x00) revert();
         // NOTE: Check if the vetos exist for the listee
-        if (requests[listingAddress].vetos.numberOfVetos == 0) {
-            // Condition for 28 days
+        if (!requests[listingAddress].flag) {
+            if (msg.sender != requests[listingAddress].listeeAddress) revert();
+
             if (now - requests[listingAddress].dateCreated < (1 * 28 days))
                 revert();
-
             listingRewardRequestsStruct storage request = requests[listingAddress];
             requests[listingAddress].listeeAddress == 0x00;
-            // listees[msg.sender].requestIdx = 0;
 
             if (!msg.sender.send(request.deposit)) revert();
             // address tokenAddress = 0x1234567890;
             //     if (!StandardToken(tokenAddress).transferFrom(msg.sender, this, rewardAmount))
             //         revert();
-        } else {
-            if (requests[listingAddress].appeal == true) {
-                if (requests[listingAddress].verdictWinner != verdictTypes.ListeeWon) revert();
-
-                // Send d + r + a, where a is 10% of d
-                uint amount = requests[listingAddress].deposit + (requests[listingAddress].deposit * 10) / 100;
-
-                requests[listingAddress].listeeAddress == 0x00;
-                // listees[msg.sender].requestIdx = 0;
-
-                if (!msg.sender.send(amount)) revert();
-                // address tokenAddress = 0x1234567890;
-                // if (!StandardToken(tokenAddress).transferFrom(msg.sender, this, rewardAmount))
-                //     revert();
-
-                RequestEvent(RequestEventTypes.Payout, listingAddress, amount);
-            }
-        }    
+            RequestEvent(RequestEventTypes.Payout, listingAddress, depositAmount);
+        }  
     }
 
-    function getVetoRequests() returns (address[]) {
-        return vetosToRequestMapping[msg.sender];
-    }
+    // function getVetoAgainstRequests() returns (address[]) {
+    //     return vetosAgainstToRequestMapping[msg.sender];
+    // }
 
-    function vetoPayout(address listingAddress) payable {
-        if(requests[listingAddress].appeal == true) {
-            if(requests[listingAddress].verdictWinner != verdictTypes.VetosWon)
-                revert();
-            // NOTE: Check if the sender exists as a veto and is authorized to be paid
-            if(requests[listingAddress].vetos.vetos[msg.sender] != vetosState.Created)
-                revert();
-        } else {
-            if (now - requests[listingAddress].vetos.dateCreated < (1 * 7 days))
-                revert();
-        }
+    // function getVetoInFavorRequests() returns (address[]) {
+    //     return vetosInFavorToRequestMapping[msg.sender];
+    // }
 
-        // Avoid reentrancy
-        uint amount = (requests[listingAddress].deposit/requests[listingAddress].vetos.numberOfVetos) + trustAmount;
-        requests[listingAddress].vetos.vetos[msg.sender] = vetosState.Withdrawn;
+    // function vetoPayout(address listingAddress) payable {
+    //     if(requests[listingAddress].appeal == true) {
+    //         if(requests[listingAddress].verdictWinner != verdictTypes.VetosWon)
+    //             revert();
+    //         // NOTE: Check if the sender exists as a veto and is authorized to be paid
+    //         if(requests[listingAddress].vetos.vetos[msg.sender] != vetosState.Created)
+    //             revert();
+    //     } else {
+    //         if (now - requests[listingAddress].vetoDateCreated < (1 * 7 days))
+    //             revert();
+    //     }
 
-        if (!msg.sender.send(amount)) revert();
+    //     // Avoid reentrancy
+    //     uint amount = (requests[listingAddress].deposit/requests[listingAddress].vetos.numberOfVetos) + trustAmount;
+    //     requests[listingAddress].vetos.vetos[msg.sender] = vetosState.Withdrawn;
+
+    //     if (!msg.sender.send(amount)) revert();
         
-        // address tokenAddress = 0x1234567890;
-        // if (!StandardToken(tokenAddress).transferFrom(msg.sender, this, rewardAmount/requests[idx].vetos.numberOfVetos))
-        //     revert();
-        RequestEvent(RequestEventTypes.Payout, listingAddress, amount);
+    //     // address tokenAddress = 0x1234567890;
+    //     // if (!StandardToken(tokenAddress).transferFrom(msg.sender, this, rewardAmount/requests[idx].vetos.numberOfVetos))
+    //     //     revert();
+    //     RequestEvent(RequestEventTypes.Payout, listingAddress, amount);
         
-        if (requests[listingAddress].vetos.numberOfWithdrawn == requests[listingAddress].vetos.numberOfVetos) {
-            requests[listingAddress].listeeAddress == 0x00;
-            listees[msg.sender].requestIdx = 0;
-        } else {
-            requests[listingAddress].vetos.numberOfWithdrawn += 1;
-        }
-    }
+    //     if (requests[listingAddress].vetos.numberOfWithdrawn == requests[listingAddress].vetos.numberOfVetos) {
+    //         requests[listingAddress].listeeAddress == 0x00;
+    //         listees[msg.sender].requestIdx = 0;
+    //     } else {
+    //         requests[listingAddress].vetos.numberOfWithdrawn += 1;
+    //     }
+    // }
 
     function returnEth(address _to) isOwner {
         if (!_to.send(this.balance)) revert();
