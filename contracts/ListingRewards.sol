@@ -175,7 +175,7 @@ contract ListingRewards {
         msg.sender.transfer(requests[msg.sender].deposit);
 
         //raise the event
-        RequestEvent(RequestEventTypes.Cancel, msg.sender, 0);
+        RequestEvent(RequestEventTypes.Cancel, msg.sender, requests[msg.sender].deposit);
     }
 
     function flagListing(address listeeAddress) payable isValidListeeAddress(listeeAddress) {
@@ -187,7 +187,7 @@ contract ListingRewards {
         // take 10% of deposit amount
         require(msg.value >= trustAmount);
 
-        requests[msg.sender].flag = true;
+        requests[listeeAddress].flag = true;
         requests[listeeAddress].vetoDateCreated = now;
 
         vetosStruct storage vetoAgainstObject = requests[listeeAddress].vetosAgainst;
