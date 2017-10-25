@@ -55,7 +55,6 @@ contract ListingRewards {
         uint amount;
         uint dateCreated;
         uint deposit;
-        bool appeal;
         bool flag;
         vetosStruct vetosInFavor;
         vetosStruct vetosAgainst;
@@ -95,23 +94,17 @@ contract ListingRewards {
     // MODIFIERS
 
     modifier isOwner() {
-        if (msg.sender == creator) {
-            _;
-        } else {
-            revert();
-        }
+        require(msg.sender == creator);
+        _;
     }
 
     modifier isValidAddress() {
-        if (requests[msg.sender].listeeAddress != 0x00) {
-            _;
-        } else {
-            revert();
-        }
+        require(requests[msg.sender].listeeAddress != 0x00);
+        _;
     }
 
-    modifier isValidListingAddress(address listingAddress) {
-        if (listingAddress == 0x00) revert();
+    modifier isValidListeeAddress(address listeeAddress) {
+        require(listeeAddress != 0x00);
         _;
     }
 
@@ -143,14 +136,14 @@ contract ListingRewards {
     //Listing Reward Amount
 
     function updateRewardAmount(uint newAmount) isOwner {
-        rewardAmount = newAmount;
+        rewardAmount = newAmount * 10e17;
         RewardAmountChanged(newAmount);
     }
 
     //Deposit Amount
 
     function updateDepositAmount(uint newAmount) isOwner {
-        depositAmount = newAmount;
+        depositAmount = newAmount * 10e17;
         trustAmount = (depositAmount * 10) / 100;
         DepositAmountChanged(newAmount);
     }
@@ -158,8 +151,8 @@ contract ListingRewards {
     // New Reward Request
     
     function newRewardRequest(uint newListings) payable {
-        if (requests[msg.sender].listeeAddress != 0x00) revert();
-        if (msg.value < depositAmount) revert();
+        require(requests[msg.sender].listeeAddress == 0x00);
+        require(msg.value * 10e17 >= depositAmount);
 
         requests[msg.sender].listeeAddress = msg.sender;
         requests[msg.sender].fromBlock = listees[msg.sender].lastBlockClaimed + 1;
@@ -173,100 +166,94 @@ contract ListingRewards {
 
     function cancelRewardRequest() payable isValidAddress {
 
-        if (requests[msg.sender].flag) revert();
-
-        listingRewardRequestsStruct storage request = requests[msg.sender];
-
+        require(!requests[msg.sender].flag);
         // Avoid reentrancy 
         //clear the data
-        requests[msg.sender].listeeAddress == 0x00;
+        requests[msg.sender].listeeAddress = 0x00;
 
         //send listee their deposit back
-        if (!request.listeeAddress.send(request.deposit))
-            revert();
+        msg.sender.transfer(requests[msg.sender].deposit);
 
         //raise the event
         RequestEvent(RequestEventTypes.Cancel, msg.sender, 0);
     }
 
-    function flagListing(address listingAddress) payable isValidListingAddress(listingAddress) {
+    function flagListing(address listeeAddress) payable isValidListeeAddress(listeeAddress) {
 
-        if (msg.sender == listingAddress) revert();
-
-        if (requests[msg.sender].flag) revert();
+        require(msg.sender != listeeAddress);
+        require(!requests[listeeAddress].flag);
         // Check if it's 28 days past reward request
-        if (now - requests[listingAddress].dateCreated > (1 * 28 days))
-            revert();
-
+        require(now - requests[listeeAddress].dateCreated <= (1 * 28 days));
         // take 10% of deposit amount
-        if (msg.value < trustAmount) revert();
+        require(msg.value >= trustAmount);
 
         requests[msg.sender].flag = true;
-        requests[listingAddress].vetoDateCreated = now;
+        requests[listeeAddress].vetoDateCreated = now;
 
-        vetosStruct storage vetoAgainstObject = requests[listingAddress].vetosAgainst;
-        vetosStruct storage vetoInfavorObject = requests[listingAddress].vetosInFavor;
+        vetosStruct storage vetoAgainstObject = requests[listeeAddress].vetosAgainst;
+        vetosStruct storage vetoInfavorObject = requests[listeeAddress].vetosInFavor;
 
         vetoAgainstObject.vetos[msg.sender] = vetosState.Created;
-        vetosAgainstToRequestMapping[msg.sender].push(listingAddress);
+        vetosAgainstToRequestMapping[listeeAddress].push(msg.sender);
 
-        vetoInfavorObject.vetos[requests[listingAddress].listeeAddress] = vetosState.Created;
-        vetosInFavorToRequestMapping[requests[listingAddress].listeeAddress].push(listingAddress);
+        vetoInfavorObject.vetos[requests[listeeAddress].listeeAddress] = vetosState.Created;
+        vetosInFavorToRequestMapping[listeeAddress].push(listeeAddress);
 
         vetoAgainstObject.numberOfVetos += 1;
         vetoInfavorObject.numberOfVetos += 1;
     }
-
-    function vetoRequest(address listingAddress, vetoType typeOfVeto) payable isValidListingAddress(listingAddress) {
+    
+    function isValidVoteRequest(address listeeAddress)  isValidListeeAddress(listeeAddress) {
         // Avoid self veto
-        if (msg.sender == listingAddress) revert();
-        // Check if it's 28 days past reward request
-        if (now - requests[listingAddress].dateCreated > (1 * 28 days))
-            revert();
+        require(msg.sender != listeeAddress);
+        // Check if it's 7 days past reward request
+        require(now - requests[listeeAddress].vetoDateCreated <= (1 * 7 days));
 
         // take 10% of deposit amount
-        if (msg.value < trustAmount) revert();
-
-        if (typeOfVeto == vetoType.Against) {
-            // Check if its 7 days past the first veto request
-            vetosStruct storage vetoAgainstObject = requests[listingAddress].vetosAgainst;
-            if (vetoAgainstObject.numberOfVetos != 0 && now - requests[listingAddress].vetoDateCreated > (1 * 7 days)) revert();
-            // Check if the veto already exist
-            if (vetoAgainstObject.vetos[msg.sender] != vetosState.NotActive) revert();
-            vetoAgainstObject.vetos[msg.sender] = vetosState.Created;
-            vetosAgainstToRequestMapping[msg.sender].push(listingAddress);
-            vetoAgainstObject.numberOfVetos += 1;
-        } else {
-            // Check if its 7 days past the first veto request
-            vetosStruct storage vetoInfavorObject = requests[listingAddress].vetosInFavor;
-            if (vetoInfavorObject.numberOfVetos != 0 && now - requests[listingAddress].vetoDateCreated > (1 * 7 days)) revert();
-            // Check if the veto already exist
-            if (vetoInfavorObject.vetos[msg.sender] != vetosState.NotActive) revert();
-            vetoInfavorObject.vetos[msg.sender] = vetosState.Created;
-            vetosInFavorToRequestMapping[msg.sender].push(listingAddress);
-            vetoInfavorObject.numberOfVetos += 1;
-        }
-
-        RequestEvent(RequestEventTypes.Vetoed, listingAddress, 0);
-
+        require(msg.value >= trustAmount);
     }
 
-    function listeePayout(address listingAddress) payable isValidListingAddress(listingAddress) {
+    function voteInFavorOfListing(address listeeAddress) payable {
+        isValidVoteRequest(listeeAddress);
+        // Check if its 7 days past the first veto request
+        vetosStruct storage vetoInfavorObject = requests[listeeAddress].vetosInFavor;
+        require(vetoInfavorObject.numberOfVetos != 0);
+        // Check if the veto already exist
+        require(vetoInfavorObject.vetos[msg.sender] == vetosState.NotActive);
+        vetoInfavorObject.vetos[msg.sender] = vetosState.Created;
+        vetosInFavorToRequestMapping[listeeAddress].push(msg.sender);
+        vetoInfavorObject.numberOfVetos += 1;
+        RequestEvent(RequestEventTypes.Vetoed, listeeAddress, 0);
+    }
+
+    function voteAgainstListing(address listeeAddress) payable {
+        isValidVoteRequest(listeeAddress);
+        vetosStruct storage vetoAgainstObject = requests[listeeAddress].vetosAgainst;
+        require(vetoAgainstObject.numberOfVetos != 0);
+        // Check if the veto already exist
+        require(vetoAgainstObject.vetos[msg.sender] == vetosState.NotActive);
+        vetoAgainstObject.vetos[msg.sender] = vetosState.Created;
+        vetosAgainstToRequestMapping[listeeAddress].push(msg.sender);
+        vetoAgainstObject.numberOfVetos += 1;
+        RequestEvent(RequestEventTypes.Vetoed, listeeAddress, 0);
+    }
+
+    function listeePayout() payable isValidAddress {
         // NOTE: Check if the vetos exist for the listee
-        if (!requests[listingAddress].flag) {
-            if (msg.sender != requests[listingAddress].listeeAddress) revert();
+        require(!requests[msg.sender].flag);
 
-            if (now - requests[listingAddress].dateCreated < (1 * 28 days))
-                revert();
-            listingRewardRequestsStruct storage request = requests[listingAddress];
-            requests[listingAddress].listeeAddress == 0x00;
+        require(now - requests[msg.sender].dateCreated > (1 * 28 days));
 
-            if (!msg.sender.send(request.deposit)) revert();
-            // address tokenAddress = 0x1234567890;
-            //     if (!StandardToken(tokenAddress).transferFrom(msg.sender, this, rewardAmount))
-            //         revert();
-            RequestEvent(RequestEventTypes.Payout, listingAddress, depositAmount);
-        }  
+        // Avoid reentrancy 
+        //clear the data
+        requests[msg.sender].listeeAddress = 0x00;
+
+        //send listee their deposit back
+        msg.sender.transfer(requests[msg.sender].deposit);
+        // address tokenAddress = 0x1234567890;
+        //     if (!StandardToken(tokenAddress).transferFrom(msg.sender, this, rewardAmount))
+        //         revert();
+        RequestEvent(RequestEventTypes.Payout, msg.sender, depositAmount);
     }
 
     function getVetoAgainstRequests() returns (address[]) {
@@ -277,16 +264,13 @@ contract ListingRewards {
         return vetosInFavorToRequestMapping[msg.sender];
     }
 
-    function vetoPayoutValidation(address listingAddress) {
-        if (listingAddress == 0x00) revert();
+    function vetoPayoutValidation(address listeeAddress) isValidListeeAddress(listeeAddress) {
 
-        if (requests[listingAddress].flag != true) revert();
-
+        require(requests[listeeAddress].flag == true);
     }
 
     function checkForVetoWinner(address listingAddress) returns (vetoType) {
-        if (now - requests[listingAddress].vetoDateCreated < (1 * 7 days))
-                revert();
+        require(now - requests[listingAddress].vetoDateCreated > (1 * 7 days));
         if (winner == vetoType.Pending) {
             if (requests[listingAddress].vetosInFavor.numberOfVetos < requests[listingAddress].vetosAgainst.numberOfVetos) {
                 winner = vetoType.Against;
@@ -301,11 +285,10 @@ contract ListingRewards {
 
         vetoPayoutValidation(listingAddress);
         // Check for the winner
-        if (checkForVetoWinner(listingAddress)!=vetoType.InFavor) revert();
+        require(checkForVetoWinner(listingAddress)==vetoType.InFavor);
 
         uint amount;
-        if (requests[listingAddress].vetosInFavor.vetos[msg.sender] != vetosState.Created)
-            revert();
+        require(requests[listingAddress].vetosInFavor.vetos[msg.sender]==vetosState.Created);
         // Avoid reentrancy
         if (msg.sender == requests[listingAddress].listeeAddress) {
             amount = (depositAmount/requests[listingAddress].vetosAgainst.numberOfVetos) + depositAmount;
@@ -314,7 +297,7 @@ contract ListingRewards {
         }
         requests[listingAddress].vetosInFavor.vetos[msg.sender] = vetosState.Withdrawn;
 
-        if (!msg.sender.send(amount)) revert();
+        msg.sender.transfer(amount);
         
         // address tokenAddress = 0x1234567890;
         // if (!StandardToken(tokenAddress).transferFrom(msg.sender, this, rewardAmount/requests[idx].vetos.numberOfVetos))
@@ -328,14 +311,13 @@ contract ListingRewards {
 
         vetoPayoutValidation(listingAddress);
         // Check for the winner
-        if (checkForVetoWinner(listingAddress)!=vetoType.Against) revert();
-        if (requests[listingAddress].vetosAgainst.vetos[msg.sender] != vetosState.Created)
-            revert();
+        require(checkForVetoWinner(listingAddress)==vetoType.Against);
+        require(requests[listingAddress].vetosAgainst.vetos[msg.sender] == vetosState.Created);
         // Avoid reentrancy
         uint amount = (requests[listingAddress].deposit/requests[listingAddress].vetosInFavor.numberOfVetos) + trustAmount;
         requests[listingAddress].vetosAgainst.vetos[msg.sender] = vetosState.Withdrawn;
 
-        if (!msg.sender.send(amount)) revert();
+        msg.sender.transfer(amount);
         
         // address tokenAddress = 0x1234567890;
         // if (!StandardToken(tokenAddress).transferFrom(msg.sender, this, rewardAmount/requests[idx].vetos.numberOfVetos))
@@ -347,7 +329,7 @@ contract ListingRewards {
 
     function checkNumberOfWithdraws(address listingAddress, vetosStruct veto) internal {
         if (veto.numberOfWithdrawn == veto.numberOfVetos) {
-            requests[listingAddress].listeeAddress == 0x00;
+            requests[listingAddress].listeeAddress = 0x00;
         } else {
             veto.numberOfWithdrawn += 1;
         }
