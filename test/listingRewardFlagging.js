@@ -2,7 +2,7 @@ var ListingRewards = artifacts.require("./ListingRewards.sol");
 const assertJump = require("./helpers/assertJump");
 const log = require("./helpers/logger");
 
-contract("ListingRewards", accounts => {
+contract("ListingRewards - FLAGGING", accounts => {
 	let listing;
 	const owner = accounts[0];
 	const listee1 = accounts[1];
