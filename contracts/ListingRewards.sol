@@ -182,6 +182,7 @@ contract ListingRewards {
 
         require(msg.sender != listeeAddress);
         require(!requests[listeeAddress].flag);
+        require(requests[listeeAddress].listeeAddress != 0x00);
         // Check if it's 28 days past reward request
         require(now - requests[listeeAddress].dateCreated <= (1 * 28 days));
         // take 10% of deposit amount
@@ -267,6 +268,14 @@ contract ListingRewards {
     function vetoPayoutValidation(address listeeAddress) isValidListeeAddress(listeeAddress) {
 
         require(requests[listeeAddress].flag == true);
+    }
+
+    function getNumberOfVotesInFavor(address listingAddress) returns (uint) {
+        return requests[listingAddress].vetosInFavor.numberOfVetos;
+    }
+
+    function getNumberOfVotesAgainst(address listingAddress) returns (uint) {
+        return requests[listingAddress].vetosAgainst.numberOfVetos;
     }
 
     function checkForVetoWinner(address listingAddress) returns (vetoType) {
