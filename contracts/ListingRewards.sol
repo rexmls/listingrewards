@@ -61,7 +61,7 @@ contract ListingRewards {
         uint vetoDateCreated;
     }
 
-    vetoType winner = vetoType.Pending;
+    vetoType winner;
 
     //ADDRESSES
 
@@ -98,18 +98,14 @@ contract ListingRewards {
         _;
     }
 
-    modifier isValidAddress() {
-        require(requests[msg.sender].listeeAddress != 0x00);
-        _;
-    }
-
-    modifier isValidListeeAddress(address listeeAddress) {
-        require(listeeAddress != 0x00);
+    modifier isValidListeeAddress(address _listeeAddress) {
+        require(requests[_listeeAddress].listeeAddress != 0x00);
         _;
     }
 
     //CTOR
     function ListingRewards(address coordinatorAddress, uint initialRewardAmount, uint initialDepositAmount) {
+        winner = vetoType.Pending;
         creator = msg.sender;
         coordinator = coordinatorAddress;
         updateRewardAmount(initialRewardAmount);
@@ -164,7 +160,7 @@ contract ListingRewards {
         RequestEvent(RequestEventTypes.New, msg.sender, 0);
     }
 
-    function cancelRewardRequest() payable isValidAddress {
+    function cancelRewardRequest() payable isValidListeeAddress(msg.sender) {
 
         require(!requests[msg.sender].flag);
         // Avoid reentrancy 
@@ -241,7 +237,7 @@ contract ListingRewards {
         RequestEvent(RequestEventTypes.Vetoed, listeeAddress, 0);
     }
 
-    function listeePayout() payable isValidAddress {
+    function listeePayout() payable isValidListeeAddress(msg.sender) {
         // NOTE: Check if the vetos exist for the listee
         require(!requests[msg.sender].flag);
 
@@ -252,7 +248,7 @@ contract ListingRewards {
         requests[msg.sender].listeeAddress = 0x00;
 
         //send listee their deposit back
-        msg.sender.transfer(requests[msg.sender].deposit);
+        msg.sender.transfer(requests[msg.sender].deposit + rewardAmount);
         // address tokenAddress = 0x1234567890;
         //     if (!StandardToken(tokenAddress).transferFrom(msg.sender, this, rewardAmount))
         //         revert();
