@@ -74,22 +74,22 @@ contract("ListingRewards", accounts => {
 	});
 
 	// CANCELLING REWARD REQUEST
-	// it("Listee trying to cancelling a reward request without a flag", async () => {
-	// 	let balance = await web3.eth.getBalance(listee1);
-	// 	log(`BALANCE: ${balance}`);
-	// 	await listing
-	// 		.newRewardRequest(1, { from: listee1, value: 2 })
-	// 		.then(tx => {
-	// 			log(`Adding new reward request ${tx.receipt.gasUsed} gas`);
-	// 		});
-	// 	balance = await web3.eth.getBalance(listee1);
-	// 	log(`BALANCE: ${balance}`);
-	// 	await listing.cancelRewardRequest({ from: listee1 }).then(tx => {
-	// 		log(`Cancel new reward request ${tx.receipt.gasUsed} gas`);
-	// 	});
-	// 	balance = await web3.eth.getBalance(listee1);
-	// 	log(`BALANCE: ${balance}`);
-	// });
+	it("Listee trying to cancelling a reward request without a flag", async () => {
+		let balance = await web3.eth.getBalance(listee1);
+		log(`BALANCE: ${balance}`);
+		await listing
+			.newRewardRequest(1, { from: listee1, value: 2 })
+			.then(tx => {
+				log(`Adding new reward request ${tx.receipt.gasUsed} gas`);
+			});
+		balance = await web3.eth.getBalance(listee1);
+		log(`BALANCE: ${balance}`);
+		await listing.cancelRewardRequest({ from: listee1 }).then(tx => {
+			log(`Cancel new reward request ${tx.receipt.gasUsed} gas`);
+		});
+		balance = await web3.eth.getBalance(listee1);
+		log(`BALANCE: ${balance}`);
+	});
 	it("Listee trying to cancel reward request without request", async () => {
 		try {
 			await listing.cancelRewardRequest({ from: listee1 }).then(tx => {
@@ -119,23 +119,38 @@ contract("ListingRewards", accounts => {
 			assertJump(error);
 		}
 	});
-	// it("Veto on a cancelled request", async () => {
-	// 	try {
-	// 		await listing
-	// 			.newRewardRequest(1, { from: listee1, value: 2 })
-	// 			.then(tx => {
-	// 				log(`Adding new reward request ${tx.receipt.gasUsed} gas`);
-	// 			});
+	it("Someone else trying to cancel reward request", async () => {
+		try {
+			await listing
+				.newRewardRequest(1, { from: listee1, value: 2 })
+				.then(tx => {
+					log(`Adding new reward request ${tx.receipt.gasUsed} gas`);
+				});
+			await listing.cancelRewardRequest({ from: listee2 }).then(tx => {
+				log(`Cancel new reward request ${tx.receipt.gasUsed} gas`);
+			});
+			assert.fail("should have thrown before");
+		} catch (error) {
+			assertJump(error);
+		}
+	});
+	it("Flag on a cancelled request", async () => {
+		try {
+			await listing
+				.newRewardRequest(1, { from: listee1, value: 2 })
+				.then(tx => {
+					log(`Adding new reward request ${tx.receipt.gasUsed} gas`);
+				});
 
-	// 		await listing.cancelRewardRequest({ from: listee1 }).then(tx => {
-	// 			log(`Cancel new reward request ${tx.receipt.gasUsed} gas`);
-	// 		});
-	// 		await listing.vetoRequest(1, { from: veto, value: 1 }).then(tx => {
-	// 			log(`Veto request ${tx.receipt.gasUsed} gas`);
-	// 		});
-	// 		assert.fail("should have thrown before");
-	// 	} catch (error) {
-	// 		assertJump(error);
-	// 	}
-	// });
+			await listing.cancelRewardRequest({ from: listee1 }).then(tx => {
+				log(`Cancel new reward request ${tx.receipt.gasUsed} gas`);
+			});
+			await listing.flagListing(1, { from: veto1, value: 2 }).then(tx => {
+				log(`Veto request ${tx.receipt.gasUsed} gas`);
+			});
+			assert.fail("should have thrown before");
+		} catch (error) {
+			assertJump(error);
+		}
+	});
 });

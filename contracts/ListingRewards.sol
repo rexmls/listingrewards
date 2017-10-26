@@ -136,14 +136,14 @@ contract ListingRewards {
     //Listing Reward Amount
 
     function updateRewardAmount(uint newAmount) isOwner {
-        rewardAmount = newAmount * 10e17;
+        rewardAmount = newAmount;
         RewardAmountChanged(newAmount);
     }
 
     //Deposit Amount
 
     function updateDepositAmount(uint newAmount) isOwner {
-        depositAmount = newAmount * 10e17;
+        depositAmount = newAmount;
         trustAmount = (depositAmount * 10) / 100;
         DepositAmountChanged(newAmount);
     }
@@ -152,7 +152,7 @@ contract ListingRewards {
     
     function newRewardRequest(uint newListings) payable {
         require(requests[msg.sender].listeeAddress == 0x00);
-        require(msg.value * 10e17 >= depositAmount);
+        require(msg.value >= depositAmount);
 
         requests[msg.sender].listeeAddress = msg.sender;
         requests[msg.sender].fromBlock = listees[msg.sender].lastBlockClaimed + 1;
