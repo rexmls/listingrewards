@@ -221,6 +221,7 @@ contract ListingRewards {
         require(vetoInfavorObject.numberOfVetos != 0);
         // Check if the veto already exist
         require(vetoInfavorObject.vetos[msg.sender] == vetosState.NotActive);
+        require(requests[listeeAddress].vetosAgainst.vetos[msg.sender] == vetosState.NotActive);
         vetoInfavorObject.vetos[msg.sender] = vetosState.Created;
         vetosInFavorToRequestMapping[listeeAddress].push(msg.sender);
         vetoInfavorObject.numberOfVetos += 1;
@@ -233,6 +234,7 @@ contract ListingRewards {
         require(vetoAgainstObject.numberOfVetos != 0);
         // Check if the veto already exist
         require(vetoAgainstObject.vetos[msg.sender] == vetosState.NotActive);
+        require(requests[listeeAddress].vetosInFavor.vetos[msg.sender] == vetosState.NotActive);
         vetoAgainstObject.vetos[msg.sender] = vetosState.Created;
         vetosAgainstToRequestMapping[listeeAddress].push(msg.sender);
         vetoAgainstObject.numberOfVetos += 1;
